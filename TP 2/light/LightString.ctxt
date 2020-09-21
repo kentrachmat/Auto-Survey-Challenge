@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=LightString
+comment0.text=\n\ Write\ a\ description\ of\ class\ LightString\ here.\n\n\ @author\ (Benedictus\ Kent\ Rachmat)\n\ @version\ (21-9-2020)\n
+comment1.params=lights
+comment1.target=LightString(java.lang.String)
+comment1.text=\n\ Constructor\ for\ objects\ of\ class\ LightString\n
+comment2.params=n
+comment2.target=void\ getLight(int)
+comment2.text=\n\ get\ lamp\ from\ Lightstring\n\ @param\ n\ \=>\ int\n
+comment3.params=
+comment3.target=void\ off()
+comment3.text=\n\ turn\ all\ bulb\ off\n
+comment4.params=i\ theBulb
+comment4.target=void\ changeLightbulb(int,\ Lightbulb)
+comment4.text=\ replace\ the\ n-th\ lightbulb\ of\ the\ light\ string\ by\ the\ given\ lightbulb.\ \n\ Nothing\ happens\ if\ i\ is\ not\ a\ valid\ index.\n\ @param\ i\ the\ number\ of\ the\ lightbulb\ to\ be\ changed\ (first\ has\ number\ 1)\ \n\ @param\ theBulb\ the\ new\ lightbulb\n
+comment5.params=
+comment5.target=void\ getConsumedPower()
+comment5.text=\n\ Get\ all\ the\ lights\ power\ (\ turned\ on\ only\ )\n
+numComments=6

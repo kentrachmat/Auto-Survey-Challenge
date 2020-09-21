@@ -1,0 +1,22 @@
+#BlueJ class context
+comment0.target=Stock
+comment0.text=\n\ Write\ a\ description\ of\ class\ Lightbulb\ here.\n\n\ @author\ (Benedictus\ Kent\ Rachmat)\n\ @version\ (21-9-2020)\n
+comment1.params=
+comment1.target=Stock()
+comment1.text=\n\ first\ Stock\ Constructor\n
+comment2.params=c
+comment2.target=Stock(int)
+comment2.text=\n\ second\ Stock\ Constructor\n\ @param\ c\ \=>\ initial\ value\n
+comment3.params=
+comment3.target=int\ getQuantity()
+comment3.text=\n\ Get\ the\ quality\ information\n\ @return\ quality\ (int)\n
+comment4.params=a
+comment4.target=void\ add(int)
+comment4.text=\n\ Adding\ the\ quality\n\ @param\ a\ \=>\ adding\ value\n
+comment5.params=b
+comment5.target=int\ remove(int)
+comment5.text=\n\ Substract\ the\ quality\n\ @param\ b\ \=>\ substracting\ value\n\ @return\ substracting\ value\n
+comment6.params=
+comment6.target=java.lang.String\ toString()
+comment6.text=\n\ Display\ quantity\ value\n
+numComments=7
