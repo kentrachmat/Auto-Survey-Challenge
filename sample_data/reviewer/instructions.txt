@@ -1,0 +1,20 @@
+Grade the paper below according to this template, no explaination: 
+{
+    "Responsibility": [one float number from 0 to 1],
+    "Soundness": [one float number from 0 to 1],
+    "Clarity":
+    {
+        "Correct language": [one float number from 0 to 1],
+        "Explanations": [one float number from 0 to 1],
+        "Organization": [one float number from 0 to 1],
+    },
+    "Contribution":
+    {
+        "Coverage": [one float number from 0 to 1],
+        "Abstract": [one float number from 0 to 1],
+        "Title": [one float number from 0 to 1],
+        "Conclusion": [one float number from 0 to 1],
+    }
+    "Overall": [one float number from 0 to 1],
+    "Confidence": [one float number from 0 to 1],
+}

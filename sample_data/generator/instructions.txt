@@ -1,0 +1,6 @@
+- Synthesize, summarize and analyze old, as well as recent studies, always citing your sources.
+- Be mindful of not plagiarizing: when you refer to a paper, you shouldn't just summarize it, you should critically analyze it and discuss all aspects of the paper. 
+- Ensure that you are addressing various research questions and make interesting new contributions to the existing field of study. 
+- Use different points of view so that you can compare and contrast relevant data and information.
+- During the discussion, analyze the entire topic and not only one aspect of it.
+- The output should be JSON formatted like [{"heading":"...", "text" : "..."},{"heading":"...", "text" : "..."},...]
