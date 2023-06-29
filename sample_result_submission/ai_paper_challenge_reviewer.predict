@@ -1,180 +1,180 @@
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.6, 'Conclusion': 0.8}, 'Overall': 0.8, 'Confidence': 0.7} 
+{'Responsibility': 0.28, 'Soundness': 0.59, 'Clarity': {'Correct language': 0.98, 'Explanations': 0.79, 'Organization': 0.51}, 'Contribution': {'Coverage': 0.55, 'Abstract': 0.93, 'Title': 0.47, 'Conclusion': 0.2}, 'Overall': 0.62, 'Confidence': 0.27} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 1.0, 'Soundness': 0.12, 'Clarity': {'Correct language': 0.58, 'Explanations': 0.36, 'Organization': 0.44}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.38, 'Title': 0.4, 'Conclusion': 0.73}, 'Overall': 0.81, 'Confidence': 0.36} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.7, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.8, 'Confidence': 0.7} 
+{'Responsibility': 0.79, 'Soundness': 0.38, 'Clarity': {'Correct language': 0.25, 'Explanations': 0.77, 'Organization': 0.08}, 'Contribution': {'Coverage': 0.75, 'Abstract': 0.29, 'Title': 0.44, 'Conclusion': 0.38}, 'Overall': 0.88, 'Confidence': 0.99} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.6, 'Explanations': 0.7, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.6, 'Title': 0.8, 'Conclusion': 0.7}, 'Overall': 0.7, 'Confidence': 0.8} 
+{'Responsibility': 0.83, 'Soundness': 0.27, 'Clarity': {'Correct language': 0.98, 'Explanations': 0.06, 'Organization': 0.36}, 'Contribution': {'Coverage': 0.11, 'Abstract': 0.97, 'Title': 0.45, 'Conclusion': 0.99}, 'Overall': 0.89, 'Confidence': 0.61} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.29, 'Soundness': 0.88, 'Clarity': {'Correct language': 0.52, 'Explanations': 0.81, 'Organization': 0.08}, 'Contribution': {'Coverage': 0.47, 'Abstract': 0.08, 'Title': 0.23, 'Conclusion': 0.47}, 'Overall': 0.72, 'Confidence': 0.98} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.29, 'Soundness': 0.37, 'Clarity': {'Correct language': 0.45, 'Explanations': 0.56, 'Organization': 0.76}, 'Contribution': {'Coverage': 0.6, 'Abstract': 0.57, 'Title': 0.81, 'Conclusion': 0.41}, 'Overall': 0.3, 'Confidence': 0.1} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.15, 'Soundness': 0.25, 'Clarity': {'Correct language': 0.21, 'Explanations': 0.23, 'Organization': 0.4}, 'Contribution': {'Coverage': 0.59, 'Abstract': 0.26, 'Title': 0.28, 'Conclusion': 0.0}, 'Overall': 0.32, 'Confidence': 0.46} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.06, 'Soundness': 0.69, 'Clarity': {'Correct language': 0.21, 'Explanations': 0.07, 'Organization': 0.76}, 'Contribution': {'Coverage': 0.49, 'Abstract': 0.19, 'Title': 0.79, 'Conclusion': 0.59}, 'Overall': 0.57, 'Confidence': 0.59} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.58, 'Soundness': 0.44, 'Clarity': {'Correct language': 0.45, 'Explanations': 0.6, 'Organization': 0.39}, 'Contribution': {'Coverage': 0.88, 'Abstract': 0.46, 'Title': 0.97, 'Conclusion': 0.48}, 'Overall': 0.11, 'Confidence': 0.8} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.77, 'Soundness': 0.17, 'Clarity': {'Correct language': 0.92, 'Explanations': 0.83, 'Organization': 0.61}, 'Contribution': {'Coverage': 0.27, 'Abstract': 0.07, 'Title': 0.22, 'Conclusion': 0.92}, 'Overall': 0.71, 'Confidence': 0.46} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.47, 'Soundness': 0.27, 'Clarity': {'Correct language': 0.12, 'Explanations': 0.28, 'Organization': 0.06}, 'Contribution': {'Coverage': 0.33, 'Abstract': 0.03, 'Title': 0.61, 'Conclusion': 0.59}, 'Overall': 0.88, 'Confidence': 0.54} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.72, 'Soundness': 0.29, 'Clarity': {'Correct language': 0.45, 'Explanations': 0.29, 'Organization': 0.72}, 'Contribution': {'Coverage': 0.31, 'Abstract': 0.03, 'Title': 0.23, 'Conclusion': 0.28}, 'Overall': 0.93, 'Confidence': 0.55} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.7, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.8, 'Confidence': 0.7} 
+{'Responsibility': 0.42, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.33, 'Explanations': 0.23, 'Organization': 0.56}, 'Contribution': {'Coverage': 0.64, 'Abstract': 0.05, 'Title': 0.7, 'Conclusion': 0.04}, 'Overall': 0.03, 'Confidence': 0.85} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.9, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.72, 'Soundness': 0.68, 'Clarity': {'Correct language': 0.03, 'Explanations': 0.67, 'Organization': 0.02}, 'Contribution': {'Coverage': 0.03, 'Abstract': 0.48, 'Title': 0.22, 'Conclusion': 0.23}, 'Overall': 0.94, 'Confidence': 0.58} 
 
 
 
-{'Responsibility': 0.7, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.3, 'Explanations': 0.4, 'Organization': 0.5}, 'Contribution': {'Coverage': 0.6, 'Abstract': 0.4, 'Title': 0.5, 'Conclusion': 0.3}, 'Overall': 0.5, 'Confidence': 0.6} 
+{'Responsibility': 0.89, 'Soundness': 0.77, 'Clarity': {'Correct language': 0.7, 'Explanations': 0.69, 'Organization': 0.07}, 'Contribution': {'Coverage': 0.21, 'Abstract': 0.58, 'Title': 0.57, 'Conclusion': 0.15}, 'Overall': 0.05, 'Confidence': 0.83} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.8, 'Confidence': 0.7} 
+{'Responsibility': 0.0, 'Soundness': 0.67, 'Clarity': {'Correct language': 0.81, 'Explanations': 0.89, 'Organization': 0.36}, 'Contribution': {'Coverage': 0.96, 'Abstract': 0.98, 'Title': 0.73, 'Conclusion': 0.77}, 'Overall': 0.26, 'Confidence': 0.48} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.3, 'Explanations': 0.5, 'Organization': 0.4}, 'Contribution': {'Coverage': 0.6, 'Abstract': 0.2, 'Title': 0.7, 'Conclusion': 0.4}, 'Overall': 0.5, 'Confidence': 0.6} 
+{'Responsibility': 0.55, 'Soundness': 0.31, 'Clarity': {'Correct language': 0.4, 'Explanations': 0.82, 'Organization': 0.98}, 'Contribution': {'Coverage': 0.41, 'Abstract': 0.23, 'Title': 0.22, 'Conclusion': 0.71}, 'Overall': 0.8, 'Confidence': 0.42} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.49, 'Soundness': 0.64, 'Clarity': {'Correct language': 0.92, 'Explanations': 0.51, 'Organization': 0.0}, 'Contribution': {'Coverage': 0.38, 'Abstract': 0.61, 'Title': 0.21, 'Conclusion': 0.05}, 'Overall': 0.43, 'Confidence': 0.34} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.83, 'Soundness': 0.73, 'Clarity': {'Correct language': 0.86, 'Explanations': 0.9, 'Organization': 0.49}, 'Contribution': {'Coverage': 0.15, 'Abstract': 0.21, 'Title': 0.1, 'Conclusion': 0.48}, 'Overall': 0.53, 'Confidence': 0.71} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.01, 'Soundness': 0.47, 'Clarity': {'Correct language': 0.18, 'Explanations': 0.73, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.95, 'Abstract': 0.21, 'Title': 0.23, 'Conclusion': 0.27}, 'Overall': 0.04, 'Confidence': 0.45} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.7}, 'Overall': 0.8, 'Confidence': 0.7} 
+{'Responsibility': 0.98, 'Soundness': 0.75, 'Clarity': {'Correct language': 0.32, 'Explanations': 0.16, 'Organization': 0.66}, 'Contribution': {'Coverage': 0.73, 'Abstract': 0.68, 'Title': 0.61, 'Conclusion': 0.82}, 'Overall': 0.31, 'Confidence': 0.13} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.21, 'Soundness': 0.43, 'Clarity': {'Correct language': 0.28, 'Explanations': 0.07, 'Organization': 0.94}, 'Contribution': {'Coverage': 0.16, 'Abstract': 0.8, 'Title': 0.88, 'Conclusion': 0.51}, 'Overall': 0.99, 'Confidence': 0.94} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.8, 'Soundness': 0.11, 'Clarity': {'Correct language': 0.48, 'Explanations': 0.75, 'Organization': 0.59}, 'Contribution': {'Coverage': 0.05, 'Abstract': 0.2, 'Title': 0.18, 'Conclusion': 0.08}, 'Overall': 0.22, 'Confidence': 0.17} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.38, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.8, 'Explanations': 0.43, 'Organization': 0.85}, 'Contribution': {'Coverage': 0.72, 'Abstract': 0.95, 'Title': 0.58, 'Conclusion': 0.36}, 'Overall': 0.5, 'Confidence': 0.25} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.03, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.74, 'Explanations': 0.31, 'Organization': 0.79}, 'Contribution': {'Coverage': 0.01, 'Abstract': 0.7, 'Title': 0.62, 'Conclusion': 0.05}, 'Overall': 0.77, 'Confidence': 0.88} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.9, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.8, 'Conclusion': 0.7}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.27, 'Soundness': 0.78, 'Clarity': {'Correct language': 0.49, 'Explanations': 0.31, 'Organization': 0.65}, 'Contribution': {'Coverage': 0.44, 'Abstract': 0.75, 'Title': 0.62, 'Conclusion': 0.89}, 'Overall': 0.45, 'Confidence': 0.62} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.25, 'Soundness': 0.19, 'Clarity': {'Correct language': 0.05, 'Explanations': 0.32, 'Organization': 0.89}, 'Contribution': {'Coverage': 0.92, 'Abstract': 0.03, 'Title': 0.75, 'Conclusion': 0.68}, 'Overall': 0.08, 'Confidence': 0.04} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.55, 'Soundness': 0.55, 'Clarity': {'Correct language': 0.65, 'Explanations': 0.1, 'Organization': 0.22}, 'Contribution': {'Coverage': 0.89, 'Abstract': 0.35, 'Title': 0.81, 'Conclusion': 0.15}, 'Overall': 0.31, 'Confidence': 0.13} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.6, 'Explanations': 0.7, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.6, 'Title': 0.7, 'Conclusion': 0.6}, 'Overall': 0.7, 'Confidence': 0.8} 
+{'Responsibility': 0.82, 'Soundness': 0.67, 'Clarity': {'Correct language': 0.52, 'Explanations': 0.71, 'Organization': 0.58}, 'Contribution': {'Coverage': 0.02, 'Abstract': 0.97, 'Title': 0.73, 'Conclusion': 0.5}, 'Overall': 0.12, 'Confidence': 0.6} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.7, 'Explanations': 0.6, 'Organization': 0.6}, 'Contribution': {'Coverage': 0.5, 'Abstract': 0.4, 'Title': 0.6, 'Conclusion': 0.4}, 'Overall': 0.6, 'Confidence': 0.7} 
+{'Responsibility': 0.96, 'Soundness': 0.95, 'Clarity': {'Correct language': 0.79, 'Explanations': 0.25, 'Organization': 0.34}, 'Contribution': {'Coverage': 0.27, 'Abstract': 0.67, 'Title': 0.89, 'Conclusion': 0.48}, 'Overall': 0.5, 'Confidence': 0.55} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.87, 'Soundness': 0.38, 'Clarity': {'Correct language': 0.7, 'Explanations': 0.31, 'Organization': 0.14}, 'Contribution': {'Coverage': 0.44, 'Abstract': 0.02, 'Title': 0.08, 'Conclusion': 0.49}, 'Overall': 0.6, 'Confidence': 0.75} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.27, 'Soundness': 0.5, 'Clarity': {'Correct language': 0.25, 'Explanations': 0.09, 'Organization': 0.55}, 'Contribution': {'Coverage': 0.87, 'Abstract': 0.02, 'Title': 0.94, 'Conclusion': 0.64}, 'Overall': 0.15, 'Confidence': 0.33} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.38, 'Soundness': 0.76, 'Clarity': {'Correct language': 0.21, 'Explanations': 0.84, 'Organization': 0.81}, 'Contribution': {'Coverage': 0.08, 'Abstract': 0.19, 'Title': 0.21, 'Conclusion': 0.22}, 'Overall': 0.81, 'Confidence': 0.8} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.8, 'Conclusion': 0.7}, 'Overall': 0.8, 'Confidence': 0.9} 
+{'Responsibility': 0.03, 'Soundness': 0.3, 'Clarity': {'Correct language': 0.62, 'Explanations': 0.27, 'Organization': 0.24}, 'Contribution': {'Coverage': 0.69, 'Abstract': 0.55, 'Title': 0.91, 'Conclusion': 0.5}, 'Overall': 0.76, 'Confidence': 0.8} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.6, 'Explanations': 0.5, 'Organization': 0.4}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.6, 'Title': 0.8, 'Conclusion': 0.6}, 'Overall': 0.6, 'Confidence': 0.7} 
+{'Responsibility': 0.09, 'Soundness': 0.69, 'Clarity': {'Correct language': 0.31, 'Explanations': 0.82, 'Organization': 0.54}, 'Contribution': {'Coverage': 0.22, 'Abstract': 0.76, 'Title': 0.83, 'Conclusion': 0.86}, 'Overall': 0.68, 'Confidence': 0.29} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.9, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.7, 'Title': 0.8, 'Conclusion': 0.7}, 'Overall': 0.8, 'Confidence': 0.9} 
+{'Responsibility': 0.68, 'Soundness': 0.72, 'Clarity': {'Correct language': 0.37, 'Explanations': 0.38, 'Organization': 0.71}, 'Contribution': {'Coverage': 0.83, 'Abstract': 0.01, 'Title': 0.56, 'Conclusion': 0.23}, 'Overall': 0.05, 'Confidence': 0.57} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.9, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.46, 'Soundness': 0.65, 'Clarity': {'Correct language': 0.05, 'Explanations': 0.69, 'Organization': 0.86}, 'Contribution': {'Coverage': 0.77, 'Abstract': 0.9, 'Title': 0.06, 'Conclusion': 0.39}, 'Overall': 0.21, 'Confidence': 0.06} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.7}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.6, 'Title': 0.7, 'Conclusion': 0.6}, 'Overall': 0.75, 'Confidence': 0.8} 
+{'Responsibility': 0.54, 'Soundness': 0.3, 'Clarity': {'Correct language': 0.29, 'Explanations': 0.78, 'Organization': 0.78}, 'Contribution': {'Coverage': 0.5, 'Abstract': 0.67, 'Title': 0.9, 'Conclusion': 0.91}, 'Overall': 0.13, 'Confidence': 0.24} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.31, 'Soundness': 0.44, 'Clarity': {'Correct language': 0.45, 'Explanations': 0.12, 'Organization': 0.94}, 'Contribution': {'Coverage': 0.78, 'Abstract': 0.03, 'Title': 0.87, 'Conclusion': 0.47}, 'Overall': 0.05, 'Confidence': 0.61} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.8, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.05, 'Soundness': 0.38, 'Clarity': {'Correct language': 0.11, 'Explanations': 0.02, 'Organization': 0.75}, 'Contribution': {'Coverage': 0.95, 'Abstract': 0.03, 'Title': 0.45, 'Conclusion': 0.46}, 'Overall': 0.35, 'Confidence': 0.4} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.9, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.8} 
+{'Responsibility': 0.37, 'Soundness': 0.82, 'Clarity': {'Correct language': 0.6, 'Explanations': 0.72, 'Organization': 0.63}, 'Contribution': {'Coverage': 0.82, 'Abstract': 0.83, 'Title': 0.36, 'Conclusion': 0.06}, 'Overall': 0.99, 'Confidence': 0.09} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.7, 'Explanations': 0.5, 'Organization': 0.4}, 'Contribution': {'Coverage': 0.6, 'Abstract': 0.4, 'Title': 0.8, 'Conclusion': 0.5}, 'Overall': 0.6, 'Confidence': 0.7} 
+{'Responsibility': 0.52, 'Soundness': 0.52, 'Clarity': {'Correct language': 0.52, 'Explanations': 0.58, 'Organization': 0.78}, 'Contribution': {'Coverage': 1.0, 'Abstract': 0.93, 'Title': 0.35, 'Conclusion': 0.2}, 'Overall': 0.18, 'Confidence': 0.71} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.8, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.2, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.95, 'Explanations': 0.83, 'Organization': 0.63}, 'Contribution': {'Coverage': 0.45, 'Abstract': 0.16, 'Title': 0.52, 'Conclusion': 0.82}, 'Overall': 0.58, 'Confidence': 0.13} 
 
 
 
-{'Responsibility': 0.9, 'Soundness': 0.8, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.9}, 'Contribution': {'Coverage': 0.9, 'Abstract': 0.9, 'Title': 0.9, 'Conclusion': 0.8}, 'Overall': 0.85, 'Confidence': 0.9} 
+{'Responsibility': 0.89, 'Soundness': 0.6, 'Clarity': {'Correct language': 0.23, 'Explanations': 0.08, 'Organization': 0.34}, 'Contribution': {'Coverage': 0.1, 'Abstract': 0.33, 'Title': 0.18, 'Conclusion': 0.12}, 'Overall': 0.96, 'Confidence': 0.23} 
 
 
 
-{'Responsibility': 0.8, 'Soundness': 0.7, 'Clarity': {'Correct language': 0.9, 'Explanations': 0.8, 'Organization': 0.8}, 'Contribution': {'Coverage': 0.7, 'Abstract': 0.8, 'Title': 0.7, 'Conclusion': 0.6}, 'Overall': 0.75, 'Confidence': 0.8} 
+{'Responsibility': 0.32, 'Soundness': 0.43, 'Clarity': {'Correct language': 0.32, 'Explanations': 0.51, 'Organization': 0.3}, 'Contribution': {'Coverage': 0.47, 'Abstract': 0.59, 'Title': 0.42, 'Conclusion': 0.57}, 'Overall': 0.43, 'Confidence': 0.58} 
 
 
 

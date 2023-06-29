@@ -145,7 +145,7 @@ class model():
                 print("reviewing paper", i+1, "out of", len(papers))
             except:
                 review_scores.append(
-                    {'Responsibility': 0, 
+                    {'Responsibility':0,  # {"score":0, "comment": ""}},
                      'Soundness': 0, 
                      'Clarity': {'Correct language': 0, 'Explanations': 0, 'Organization': 0}, 
                      'Contribution': {'Coverage': 0, 'Abstract': 0, 'Title': 0, 'Conclusion': 0}, 
