@@ -47,12 +47,11 @@ def initialize(input_dir, output_dir, program_dir, submission_dir, data_name):
 
 def process_data(data):
     generator_X = data["generator"]["prompts"]
-    reviewer_X = data["reviewer"]["papers"]
     
-    return generator_X, reviewer_X
+    return generator_X
 
 
-def execute_model(generator_X, reviewer_X, data):
+def execute_model(generator_X, data):
     # Creating a model
     M = model()
 
@@ -61,36 +60,29 @@ def execute_model(generator_X, reviewer_X, data):
     generator_Y_hat = M.generate_papers(generator_X, instruction=data["generator"]["instructions"])
     vprint( VERBOSE,  "[+] Generation success, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
 
-    # Review papers
-    vprint( VERBOSE,  "======== Reviewing papers ==========")
-    reviewer_Y_hat = M.review_papers(reviewer_X, instruction=data["reviewer"]["instructions"])            
-    vprint( VERBOSE,  "[+] Prediction success, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
-
-    return M, generator_Y_hat, reviewer_Y_hat
+    return M, generator_Y_hat
 
 
-def save_results(M, data_name, generator_Y_hat, reviewer_Y_hat, output_dir):
+def save_results(M, data_name, generator_Y_hat, output_dir):
     # Saving results
     filename_generator = data_name + f'_generator.predict'
-    filename_reviewer = data_name + f'_reviewer.predict'
     vprint( VERBOSE, "======== Saving results to: " + output_dir)
     data_io.write(os.path.join(output_dir,filename_generator), generator_Y_hat)
-    data_io.write(os.path.join(output_dir,filename_reviewer), reviewer_Y_hat)
 
     vprint( VERBOSE,  "[+] Results saved, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
     time_spent = time.time() - OVERALL_START 
     time_left_over = MAX_TIME - time_spent
     vprint( VERBOSE,  "[+] End cycle, time left %5.2f sec" % time_left_over)
 
-    del M, generator_Y_hat, reviewer_Y_hat
+    del M, generator_Y_hat
     gc.collect()
 
 
 def main(input_dir, output_dir, program_dir, submission_dir, data_name):
     data, meta_data = initialize(input_dir, output_dir, program_dir, submission_dir, data_name)
-    generator_X, reviewer_X = process_data(data)
-    M, generator_Y_hat, reviewer_Y_hat = execute_model(generator_X, reviewer_X, data)
-    save_results(M, data_name, generator_Y_hat, reviewer_Y_hat, output_dir)
+    generator_X = process_data(data)
+    M, generator_Y_hat = execute_model(generator_X, data)
+    save_results(M, data_name, generator_Y_hat, output_dir)
 
     overall_time_spent = time.time() - OVERALL_START
 

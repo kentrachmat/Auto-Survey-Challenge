@@ -1,20 +1,27 @@
-Grade the paper below according to this template, no explaination: 
+Grade the paper below according to this template:
 {
-    "Responsibility": [one float number from 0 to 1],
-    "Soundness": [one float number from 0 to 1],
-    "Clarity":
-    {
-        "Correct language": [one float number from 0 to 1],
-        "Explanations": [one float number from 0 to 1],
-        "Organization": [one float number from 0 to 1],
+    "Responsibility": {
+        "score": [one float number from 0 to 1],
+        "comment": [Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy?]
     },
-    "Contribution":
-    {
-        "Coverage": [one float number from 0 to 1],
-        "Abstract": [one float number from 0 to 1],
-        "Title": [one float number from 0 to 1],
-        "Conclusion": [one float number from 0 to 1],
-    }
-    "Overall": [one float number from 0 to 1],
-    "Confidence": [one float number from 0 to 1],
+    "Soundness": {
+        "score": [one float number from 0 to 1],
+        "comment": [Does the answer present accurate facts, supported by citations of authoritative references?]
+    },
+    "Clarity":{
+        "score": [one float number from 0 to 1],
+        "comment": [Is the paper written in good English, with correct grammar, and precise vocabulary? Is the paper well organized in meaningful sections and subsections? Are the concepts clearly explained, with short sentences?]
+    },
+    "Contribution": {
+        "score": [one float number from 0 to 1],
+        "comment": [Does the answer provide a comprehensive overview, comparing and contrasting a plurality of viewpoints?]
+    },
+    "Overall": {
+        "score": [one float number from 0 to 1],
+        "comment": [Provide an overall recommendation.]
+    },
+    "Confidence": {
+        "score": [one float number from 0 to 1],
+        "comment": [Evaluates your own confidence in the overall recommendation.]
+    },
 }

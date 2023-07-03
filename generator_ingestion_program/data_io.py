@@ -71,7 +71,6 @@ def read_data(data_dir, random_state=42):
     # Settings
     #----------------------------------------------------------------
     GENERATOR_PATH = os.path.join(data_dir, "generator")
-    REVIEWER_PATH = os.path.join(data_dir, "reviewer")
 
 
     #----------------------------------------------------------------
@@ -81,12 +80,6 @@ def read_data(data_dir, random_state=42):
     # Check Generator Directory
     if not os.path.exists(GENERATOR_PATH):
         print('[-] Generation prompts directory Not Found')
-        # print('Make sure your dataset is in this format: https://github.com/fnachalearn/dataformat-style-trans-fair/blob/main/README.MD')
-        return
-
-    #Check Reviewer Directory
-    if not os.path.exists(REVIEWER_PATH):
-        print('[-] Essays for Reviewer Not Found')
         # print('Make sure your dataset is in this format: https://github.com/fnachalearn/dataformat-style-trans-fair/blob/main/README.MD')
         return
 
@@ -117,24 +110,6 @@ def read_data(data_dir, random_state=42):
     data_dict['generator']['ids'] = randomized_generator_df['id'].values
 
     
-    
-    
-    #----------------------------------------------------------------
-    # REVIEWER: 
-    #----------------------------------------------------------------
-    data_dict['reviewer'] = {}
-    with open(os.path.join(REVIEWER_PATH, "instructions.txt")) as f:
-        data_dict['reviewer']['instructions'] = f.read()
-
-    data_dict['reviewer']['ids'] = []
-    data_dict['reviewer']['papers'] = []
-    
-    all_reviewer_files = glob.glob(os.path.join(REVIEWER_PATH, 'papers', '*.json'))
-    for i in range(len(all_reviewer_files)):
-        paper_id = os.path.basename(all_reviewer_files[i]).split('.')[0]
-        data_dict['reviewer']['ids'].append(paper_id)
-        with open(all_reviewer_files[i]) as f:
-            data_dict['reviewer']['papers'].append(json.load(f))
 
     print("-------------------------------------")
     print("[+] Data loaded successfully")

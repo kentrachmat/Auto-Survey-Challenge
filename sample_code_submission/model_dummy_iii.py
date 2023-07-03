@@ -5,13 +5,91 @@ You must supply at least 2 methods:
 - review_papers: generate a random score for each paper
 """
 
+import os
+import time
+import json
+from os.path import isfile
+import openai
 import random
+
+def retry_with_exponential_backoff(
+    func,
+    initial_delay: float = 1,
+    exponential_base: float = 2,
+    jitter: bool = True,
+    max_retries: int = 15,
+    errors: tuple = (openai.error.RateLimitError,),
+):
+    """Retry a function with exponential backoff."""
+
+    def wrapper(*args, **kwargs):
+        # Initialize variables
+        num_retries = 0
+        delay = initial_delay
+
+        # Loop until a successful response or max_retries is hit or an exception is raised
+        while True:
+            try:
+                return func(*args, **kwargs)
+
+            # Retry on any errors
+            except errors as e:
+                # Increment retries
+                print(f"Error: {e}")
+                num_retries += 1
+
+                # Check if max retries has been reached
+                if num_retries > max_retries:
+                    raise Exception(
+                        f"Maximum number of retries ({max_retries}) exceeded."
+                    )
+
+                # Increment the delay
+                delay *= exponential_base * (1 + jitter * random.random())
+
+                # Sleep for the delay
+                time.sleep(delay)
+
+            # # Raise exceptions for any errors not specified
+            except Exception as e:
+                num_retries += 1
+                pass
+
+    return wrapper
  
+
 class model():
     def __init__(self):
-       pass
+        """
+        This constructor is supposed to initialize data members. 
+        """
+        current_real_dir = os.path.dirname(os.path.realpath(__file__))
+        target_dir = os.path.join(current_real_dir, 'sample_submission_chatgpt_api_key.json')
 
-    def generate_papers(self, prompts, _):
+        if isfile(target_dir):
+            with open(target_dir, 'rb') as f:
+                openai.api_key = json.load(f)['key']
+        else:
+            print("Warning: no api key file found.")
+
+    def setApiKey(self, api_key):
+        openai.api_key = api_key
+
+    def conversation_generator(self, system, content):
+        conversation = [{"role": "system", "content": system}]
+        conversation.append({"role": "user", "content": content })
+        return conversation
+
+    @retry_with_exponential_backoff
+    def askChatGpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
+        response = openai.ChatCompletion.create(
+                    model=model,
+                    temperature=temperature,
+                    messages=conversation
+                )
+        return response.choices[0]['message']['content']
+    
+    def generate_papers(self, prompts, instruction):
         """
         Arguments:
             prompts: list of strings 
@@ -84,38 +162,52 @@ class model():
                     "heading": "References",
                     "text": "@article{almufti2017using,\n  title={Using Swarm Intelligence for solving NPHard Problems},\n  author={Almufti, S},\n  journal={Academic Journal of Nawroz University},\n  year={2017}\n}\n\n@article{alroomi2006essential,\n  title={Essential Modifications on Biogeography-Based Optimization Algorithm},\n  author={Alroomi, A and Albasri, F and Talaq, M and Townsend, CR and Harper, JL},\n  journal={Blackwell Publishing},\n  year={2006}\n}\n\n@article{binitha2012survey,\n  title={A Survey of Bio inspired Optimization Algorithms},\n  author={Binitha, S and Sathya, SS},\n  journal={International Journal of Soft Computing and Engineering},\n  year={2012}\n}\n\n@article{chen2008optimization,\n  title={Optimization based on symbiotic multi-species coevolution},\n  author={Chen, H and Zhu, Y},\n  journal={Applied Mathematics and Computation},\n  year={2008}\n}\n\n@article{das2011differential,\n  title={Differential evolution: a survey of the state-of-the-art},\n  author={Das, S and Suganthan, PN},\n  journal={IEEE Trans.Evol. Comput},\n  year={2011}\n}\n\n@article{dorigo1996ant,\n  title={Ant system: optimization by a colony ofcooperating agents},\n  author={Dorigo, M and Maniezzo, V and Colorni, A},\n  journal={IEEE Trans. Syst. Man Cybern. B},\n  year={1996}\n}\n\n@article{dubey2014bio,\n  title={Bio-inspired optimisation for economic load dispatch: a review},\n  author={Dubey, H and Panigrahi, B and Pandit, M},\n  journal={International Journal Of Bio-Inspired Computation},\n  year={2014}\n}\n\n@book{goldberg1989genetic,\n  title={Genetic Algorithms in Search, Optimization, and Machine Learning},\n  author={Goldberg, DE},\n  year={1989},\n  publisher={Addison-Wesley}\n}\n\n@book{holland1975adaptation,\n  title={Adaptation in Natural and Artificial Systems},\n  author={Holland, JH},\n  year={1975},\n  publisher={University of Michigan Press}\n}\n\n@article{kumar2014parameter,\n  title={Parameter adaptive harmony search algorithm for unimodal and multimodal optimization problems},\n  author={Kumar, V and Chhabra, J and Kumar, D},\n  journal={Journal of Computational Science},\n  year={2014}\n}\n\n@article{li2007comparative,\n  title={A comparative study of three evolutionary algorithms for surface acoustic wave sensor wavelength selection},\n  author={Li, C and Heinemann, P},\n  journal={Sensors and Actuators B: Chemical},\n  year={2007}\n}\n\n@article{li2010solving,\n  title={Solving TSP by an ACO-and-BOA-based Hybrid Algorithm},\n  author={Li, Y},\n  journal={IEEE Press},\n  year={2010}\n}\n\n@book{may2007theoretical,\n  title={Theoretical Ecology: Principles and Applications},\n  author={May, RMC and Mclean, AR},\n  year={2007},\n  publisher={Oxford University Press}\n}"
                 }]
+            
             print("Generating paper", i+1, "out of", len(prompts))
             generated_papers.append(template)
         return generated_papers
     
 
-    def review_papers(self, papers, _):
+    def review_papers(self, papers, instruction):
         """
         Arguments:
-            papers: list of strings 
+            papers: list of strings
+            instructions: a string of instructions
         Returns:
             review_scores: list of dictionaries of scores, depending on the instructions
         """
+
         review_scores = []
-
         for i in range(len(papers)):
-            review_score = {'Responsibility': round(random.uniform(0, 1), 2),
-                            'Soundness': round(random.uniform(0, 1), 2),
-                            'Clarity': {
-                                'Correct language': round(random.uniform(0, 1), 2),
-                                'Explanations': round(random.uniform(0, 1), 2),
-                                'Organization': round(random.uniform(0, 1), 2)
-                            },
-                            'Contribution': {
-                                'Coverage': round(random.uniform(0, 1), 2),
-                                'Abstract': round(random.uniform(0, 1), 2),
-                                'Title': round(random.uniform(0, 1), 2),
-                                'Conclusion': round(random.uniform(0, 1), 2)
-                            },
-                            'Overall': round(random.uniform(0, 1), 2),
-                            'Confidence': round(random.uniform(0, 1), 2)
-                            }
-            print("reviewing paper", i+1, "out of", len(papers))
-            review_scores.append(review_score)
+            conversation = [{"role": "system", "content": "You are a helpful assistant who will help me review papers."}]
+            conversation.append({"role": "user", "content": instruction + json.dumps(papers[i])})
 
+            review_score = self.askChatGpt(conversation)
+            
+            try:
+                review_score = json.loads(review_score)
+                review_scores.append(review_score)
+                print("reviewing paper", i+1, "out of", len(papers))
+            except:
+                review_scores.append({
+                        "Responsibility": {
+                            "score": 0,
+                            "comment": ""
+                        },
+                        "Soundness": {
+                            "score": 0,
+                            "comment": ""
+                        },
+                        "Clarity":{
+                            "score": 0,
+                            "comment": ""
+                        },
+                        "Contribution": {
+                            "score": 0,
+                            "comment": ""
+                        }
+                    }
+                )
+                print("Error: the response is not a valid json string.")
+                pass
         return review_scores
