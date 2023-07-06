@@ -66,15 +66,3 @@ class Respectfulness(Base):
 				f"For the question: \"Is the language polite and non discriminatory?\", you gave an assessment score of {meta_review_score}/1.0 . Continue to criticize the review.\n"
 
 		return prompt
-
-	def get_reason(self, score, comment, meta_review_score):
-		prompt = [
-			{"role": "system", "content":"You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a reason for the score."},
-			{"role": "user", "content": \
-				"For the given score and comment:\n" + \
-				f"Score: {score} Comment: {comment}\n" + \
-				f"A meta-reviewer gave an assessment score of {meta_review_score} for the question: \"Is the language polite and non discriminatory?\". Please provide a short reason for the assessment."},
-		]
-		meta_review_comment = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-
-		return meta_review_comment

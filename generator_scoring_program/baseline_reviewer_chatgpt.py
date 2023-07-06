@@ -107,7 +107,7 @@ class BaselineReviewer:
         combined_result['soundness']['c1'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the references are legitimate)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
         combined_result['soundness']['c2'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the references employed by the paper align well with the content it generates)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
         combined_result['soundness']['c3'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the paper does not randomly cite unrelated papers, maintaining a coherent academic narrative)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
-        combined_result['confidence'] = self.compare_one_paper(prediction_paper,'Evaluate the confidence of the paper','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
+        # combined_result['confidence'] = self.compare_one_paper(prediction_paper,'Evaluate the confidence of the paper','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
         
         print("Done calculating soundness and confidence")
         return combined_result
@@ -138,7 +138,8 @@ class BaselineReviewer:
             
 
             success = False
-            while not success:
+            num_trials = 0
+            while not success and num_trials < 5:
                 try:
                     result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
                     return custom_json_loads(result)
@@ -146,6 +147,7 @@ class BaselineReviewer:
                 except Exception as e:
                     print("Error: ", e)
                     print("Retrying...")
+                    num_trials += 1
                     success = False
         else:
             conversation.append({"role": "user", "content":
@@ -163,7 +165,8 @@ class BaselineReviewer:
         "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))]})
 
         success = False
-        while not success:
+        num_trials = 0
+        while not success and num_trials < 5:
             try:
                 result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
                 return float(result)
@@ -171,6 +174,7 @@ class BaselineReviewer:
             except Exception as e:
                 print("Error: ", e)
                 print("Retrying...")
+                num_trials += 1
                 success = False
 
     def compare_two_paper(self, paraphrased_paper, prediction_paper, prediction_prompt, criterion):
@@ -243,7 +247,8 @@ class BaselineReviewer:
             "The papers:\n{'Paper 1':\n" + shorter_paraphrased_paper + ",\n'Paper 2':\n" + shorter_prediction_paper+ '\n}'})
 
         success = False
-        while not success:
+        num_trials = 0
+        while not success and num_trials < 5:
             try:
                 result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
                 json_result = custom_json_loads(result)
@@ -261,6 +266,7 @@ class BaselineReviewer:
             except Exception as e:
                 print("Error: ", e)
                 print("Retrying...")
+                num_trials += 1
                 success = False
 
         

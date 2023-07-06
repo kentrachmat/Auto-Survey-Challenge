@@ -101,6 +101,7 @@ def read_data(data_dir, random_state=42):
     # REVIEWER: 
     #----------------------------------------------------------------
     data_dict['reviewer'] = {}
+    data_dict['reviewer']['metadata'] = pd.read_csv(os.path.join(REVIEWER_PATH, "metadata.csv"))
     with open(os.path.join(REVIEWER_PATH, "instructions.txt")) as f:
         data_dict['reviewer']['instructions'] = f.read()
 

@@ -72,23 +72,26 @@ class MetaTextReviewer:
             ]
 
             success = False
-            while not success:
+            num_trials = 0
+            while not success and num_trials < 5:
                 try:
                     answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
                     answer = custom_json_loads(answer)
+                    rating_score = (float(answer["rating_score"]) - 1) / 2
+                    precision_score = (float(answer["precision_score"]) - 1) / 2
+                    correctness_score = (float(answer["correctness_score"]) - 1) / 2
+                    recommendation_score = (float(answer["recommendation_score"]) - 1) / 2
+                    respectfulness_score = self.respectfulness_reviewer.evaluate(score, comment)
+
+                    return np.array([rating_score, precision_score, correctness_score, recommendation_score, respectfulness_score])
                     success = True
                 except Exception as e:
                     print("Error: ", e)
                     print("Retrying...")
+                    num_trials += 1
                     success = False
 
-            rating_score = (float(answer["rating_score"]) - 1) / 2
-            precision_score = (float(answer["precision_score"]) - 1) / 2
-            correctness_score = (float(answer["correctness_score"]) - 1) / 2
-            recommendation_score = (float(answer["recommendation_score"]) - 1) / 2
-            respectfulness_score = self.respectfulness_reviewer.evaluate(score, comment)
-
-            return np.array([rating_score, precision_score, correctness_score, recommendation_score, respectfulness_score])
+            
 
     def get_meta_review_reasons(self, scores_and_comments, meta_review_scores, criteria_to_review):
         meta_review_reasons = {}
@@ -135,7 +138,8 @@ class MetaTextReviewer:
             ]
 
             success = False
-            while not success:
+            num_trials = 0
+            while not success and num_trials < 5:
                 try:
                     answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
                     answer = custom_json_loads(answer)
@@ -143,6 +147,7 @@ class MetaTextReviewer:
                 except Exception as e:
                     print("Error: ", e)
                     print("Retrying...")
+                    num_trials += 1
                     success = False
 
             rating_reason = answer["rating_reason"]

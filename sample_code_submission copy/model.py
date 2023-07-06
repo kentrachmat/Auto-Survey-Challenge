@@ -151,7 +151,6 @@ class model():
             try:
                 review_score = json.loads(review_score)
                 review_scores.append(review_score)
-                print("reviewed paper:", review_score)
                 print("reviewing paper", i+1, "out of", len(papers))
             except:
                 review_scores.append({
@@ -168,6 +167,10 @@ class model():
                             "comment": ""
                         },
                         "Contribution": {
+                            "score": 0,
+                            "comment": ""
+                        },
+                        "Confidence": {
                             "score": 0,
                             "comment": ""
                         }

@@ -37,6 +37,7 @@ class Evaluator:
 
         self.average_score_of_good_papers_text_meta_review = None
         self.average_score_of_bad_papers_text_meta_review = None
+        self.pairs_of_good_and_bad_scores = None
 
         self.three_highest_score_paper_details = None
         self.three_lowest_score_paper_details = None
@@ -192,6 +193,7 @@ class Evaluator:
         # ============== NUMERIC REVIEWER RANKING SCORES ==============
         # Calculate ranking score of: RESPONSIILITY, SOUNDNESS, CONTRIBUTION, CLARITY
         # loop over each set of papers
+        self.pairs_of_good_and_bad_scores = {criterion: [] for criterion in self.numeric_reviewer_ranking_scores}
         average_ranking_score_across_all_sets = []
         for set_i in range(len(good_scores_ids)):
             average_ranking_score_each_set = []
@@ -211,6 +213,10 @@ class Evaluator:
 
                     self.numeric_reviewer_ranking_scores[criterion].append(rank)
                     average_ranking_score_each_set.append(rank)
+
+                    # save the good and bad scores for each criterion
+                    for bad_score in all_bad_scores:
+                        self.pairs_of_good_and_bad_scores[criterion].append((good_score, bad_score))
             
             average_ranking_score_across_all_sets.append(np.mean(average_ranking_score_each_set))
             
@@ -231,6 +237,8 @@ class Evaluator:
         for set_i in range(len(good_scores_ids)):
             # correlation = cov(x, y) / (std(x) * std(y))
             correlation = stats.pearsonr(average_ranking_score_across_all_sets, confidence_score_each_set)[0]
+            # scale the correlation to be between 0 and 1
+            correlation = (correlation + 1) / 2
             self.numeric_reviewer_ranking_scores["confidence"].append(0 if np.isnan(correlation) else correlation)
 
         print("###-------------------------------------###")
@@ -481,6 +489,7 @@ class Evaluator:
         """
         # Plot the table
         # sns.set(font_scale=2.0)
+        plt.rc('font', size=12)
         fig = plt.figure()
         text_reviewer_scores_round_2_decimal = np.round(text_reviewer_scores, 2)
         # colLabels = Rating, Precision, Correctness, Recommendation, Respectfulness
@@ -511,6 +520,58 @@ class Evaluator:
 
         html_file.write("<img src="+dataurl+" alt='Reviewer scores' width='800'/>\n")
         os.remove('reviewer_scores.png')
+
+    def plot_difference_of_scores_to_html(self, html_file):
+        # Big font
+        plt.rc('font', size=16)
+
+        # For each criterion, plot the difference between the good and bad scores
+        figs, axes = plt.subplots(2, 2, figsize=(15, 8))
+        for crit_i, criterion in enumerate(self.super_categories_for_text_reviewer):
+            ax = axes[crit_i//2][crit_i%2]
+
+            pairs_of_scores = self.pairs_of_good_and_bad_scores[criterion]
+            good_scores = [pair[0] for pair in pairs_of_scores]
+            bad_scores = [pair[1] for pair in pairs_of_scores]
+            difference_of_scores = np.array(good_scores) - np.array(bad_scores)
+
+            # Perform a t-test to see if the difference is significant
+            t_statistic, p_value = stats.ttest_rel(good_scores, bad_scores)
+            # Create a boxplot of the difference
+            bp = ax.boxplot(difference_of_scores, showfliers=False)
+            # Add some random "jitter" to the x-axis
+            x = np.random.normal(1, 0.04, size=len(difference_of_scores))
+            ax.plot(x, difference_of_scores, 'r.', alpha=0.5)
+            ax.set_ylim([-1, 1])
+
+            # Add label and title
+            ax.set_ylabel("Difference of good / bad")
+            # Make the first letter of each word in the title uppercase
+            ax.set_title(criterion.title())
+            ax.set_xticks([])
+
+            # Add t-statistic and p-value as text annotation
+            text = f"t-statistic: {t_statistic:.2f}\np-value: {p_value:.2e}"
+            ax.text(0.05, 0.95, text, transform=plt.gca().transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(facecolor='white', edgecolor='black'))
+
+        # Save the plot
+        # plt.subplots_adjust(left=0.1, right=1.0, top=1.0, bottom=0.1)
+        
+        plt.tight_layout()
+        plt.savefig('difference_of_scores.png', dpi=300)
+        plt.close()
+
+        # Save the plot in the html file
+        binary_fc = open('difference_of_scores.png', 'rb').read()
+        base64_utf8_str = base64.b64encode(binary_fc).decode('utf-8')
+        ext = 'png'
+        dataurl = f'data:image/{ext};base64,{base64_utf8_str}'
+        html_file.write("<img src="+dataurl+" alt='Difference of scores' width='1000'/>\n")
+        os.remove('difference_of_scores.png')
+
+
+
 
     def write_paper_details_to_html_file(self, paper_details, html_file):
         """Write the paper details to html file.

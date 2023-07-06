@@ -10,6 +10,7 @@ import time
 import os
 from sys import argv, path
 import datetime
+from config import CHEATING_MODE
 
 # Configurations
 VERBOSE = True 
@@ -57,7 +58,10 @@ def execute_model(reviewer_X, data):
 
     # Review papers
     vprint( VERBOSE,  "======== Reviewing papers ==========")
-    reviewer_Y_hat = M.review_papers(reviewer_X, instruction=data["reviewer"]["instructions"])            
+    if CHEATING_MODE and M.review_papers.__code__.co_argcount==5:
+        reviewer_Y_hat = M.review_papers(reviewer_X, instruction=data["reviewer"]["instructions"], ids=data["reviewer"]["ids"], metadata=data["reviewer"]["metadata"])
+    else:
+        reviewer_Y_hat = M.review_papers(reviewer_X, instruction=data["reviewer"]["instructions"])
     vprint( VERBOSE,  "[+] Prediction success, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
 
     return M, reviewer_Y_hat

@@ -137,7 +137,13 @@ def print_numeric_scores(score_title, score, evaluator, html_file):
 
         html_file.write(f"<br><small>Score based on rating good papers better than bad papers.</small><br>")
         html_file.write(f"<small><span style='color:red;'>Red</span> means score below 0.5.</small><br>\n")
-        html_file.write("<br>\n")
+        html_file.write("<br>")
+        # html_file.write("To visualize how well your reviewer differentiated between good and bad papers, we plot the diffence between every pair of good and bad papers below:<br>")
+        # The sentence above is too long, write a better one
+        html_file.write("Box plot of score diffence between good and bad papers:<br>")
+        evaluator.plot_difference_of_scores_to_html(html_file)
+        # Write a note in smaller text
+        html_file.write("<br><small>Horizontal axis has no information</small><br>")
 
 def main():
     """ Main function to coordinate scoring """
