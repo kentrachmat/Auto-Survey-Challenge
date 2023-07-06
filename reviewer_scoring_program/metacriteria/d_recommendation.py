@@ -30,7 +30,7 @@ class Recommendation(Base):
 	# 			"Output your assessment in Likert scale from 1 to 3, exclusively in JSON format: {\"score\" : [1 for No, 2 for More-or-less, 3 for Yes]}\n" },
 	# 	]
 	# 	answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-	# 	meta_review_score = (float(json.loads(answer)["score"]) - 1) / 2
+	# 	meta_review_score = (float(custom_json_loads(answer)["score"]) - 1) / 2
 	# 	return meta_review_score
 
 	# def get_reason(self, score, comment, meta_review_score):

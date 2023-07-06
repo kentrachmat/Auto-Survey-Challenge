@@ -3,11 +3,13 @@
 # Usage: python ingestion.py input_dir output_dir scoring_output_dir
 
 import os
-import json5 as json
+import json
 import time
 from sys import argv
 import libscores
 from evaluator import Evaluator
+
+from subcriteria.utils import *
 
 # Set up default directories and file names:
 ROOT_DIR = "../"
@@ -58,6 +60,21 @@ def compute_scores(evaluator, solution_dir, prediction_dir, data_name):
 # HTML Comments
 def write_to_output_files(score_dir, generator_overall_score, generator_score, evaluator, html_comments, duration):
     """ Write output results to JSON and HTML files """
+    with open(os.path.join(score_dir, 'scores.json'), 'w') as score_file, \
+         open(os.path.join(score_dir, 'scores_ai_author.html'), 'w') as html_file:
+        
+        html_file.write(f"<h2>======= Review result of the AI generated paper =======</h2>")
+
+        final_generator_overall_score = evaluator.get_overall_generator_scores() 
+        
+        print_scores_generator("Review Score", generator_overall_score, evaluator, final_generator_overall_score, html_file, num_prompts = len(generator_score))
+
+        score_json = {
+            'score': final_generator_overall_score,
+            'duration': duration
+        }
+        
+        score_file.write(json.dumps(score_json))
 
     # Make directory for full papers
     if not os.path.exists(os.path.join(score_dir, 'ai_author_full_papers')):
@@ -66,22 +83,6 @@ def write_to_output_files(score_dir, generator_overall_score, generator_score, e
     for index, data in enumerate(generator_score):
         with open(os.path.join(score_dir, 'ai_author_full_papers', f'paper_{index}.html'), 'w') as html_file:
             print_scores_each_paper(data, evaluator, html_file, evaluator.generator_predictions[index], evaluator.generator_prompts[index], html_comments[index])
-
-    with open(os.path.join(score_dir, 'scores.json'), 'w') as score_file, \
-         open(os.path.join(score_dir, 'scores_ai_author.html'), 'w') as html_file:
-        
-        html_file.write(f"<h2>======= Review result of the AI generated paper =======</h2>")
-
-        final_generator_overall_score = evaluator.get_overall_generator_scores() 
-        
-        print_scores_generator("Review Score", generator_overall_score, evaluator, final_generator_overall_score, html_file, index)
-
-        score_json = {
-            'score': final_generator_overall_score,
-            'duration': duration
-        }
-        
-        score_file.write(json.dumps(score_json))
 
 def write_json_paper_to_html_file(json_paper, html_file):
     for index, data in enumerate(json_paper):
@@ -102,10 +103,10 @@ def print_scores_each_paper(data, evaluator, html_file, generated_paper, prompt_
     print(f"======= Prompt : {prompt_name} =======")
     print(f"======= Generated Paper =======")
     print(generated_paper)
-    json_paper = json.loads(generated_paper)
+    json_paper = custom_json_loads(generated_paper)
     write_json_paper_to_html_file(json_paper, html_file)
 
-def print_scores_generator(score_title, score, evaluator, overall_generator_score, html_file, index):
+def print_scores_generator(score_title, score, evaluator, overall_generator_score, html_file, num_prompts):
     """ Print and write scores to HTML files """
     if score == MISSING_SCORE:
         print(f"======= {score_title}: ERROR =======")
@@ -116,7 +117,7 @@ def print_scores_generator(score_title, score, evaluator, overall_generator_scor
         html_file.write(f"<p>Detailed reviews:</p>")
 
         html_file.write("<ol>")
-        for i in range(index + 1):
+        for i in range(num_prompts):
             html_file.write(f"<li><a href='ai_author_full_papers/paper_{i}.html'>Prompt {i}</a></li>")
         html_file.write("</ol>")
 

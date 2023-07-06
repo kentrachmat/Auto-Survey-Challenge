@@ -9,6 +9,8 @@ import time
 from sys import argv
 from sklearn.metrics import accuracy_score
 
+from metacriteria.utils import custom_json_loads
+
 import libscores
 import yaml
 from evaluator import Evaluator

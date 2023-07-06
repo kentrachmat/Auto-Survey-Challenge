@@ -15,6 +15,8 @@ from tqdm.auto import tqdm
 from collections import defaultdict
 from libscores import kendall_tau, safe_kendalltau
 
+from metacriteria.utils import custom_json_loads
+
 from meta_text_reviewer import MetaTextReviewer
 
 class Evaluator:
@@ -102,14 +104,14 @@ class Evaluator:
         loaded_reviewer_predictions = []
         for x in self.reviewer_predictions:
             try:
-                loaded_reviewer_predictions.append(json.loads(x))
+                loaded_reviewer_predictions.append(custom_json_loads(x))
             except:
                 print("#--ERROR--# Reviewer prediction file is not in JSON format: " + x)
                 # Add a comma after every "}" if THE COMMA IS NOT THERE
                 x = re.sub(r'}(?!\s*,)', r'},', x)
                 while not x.endswith("}"):
                     x = x[:-1]
-                loaded_reviewer_predictions.append(json.loads(x))
+                loaded_reviewer_predictions.append(custom_json_loads(x))
 
         self.reviewer_predictions = loaded_reviewer_predictions
         # remove all spaces from the keys and keys of values of each of reviewer prediction
@@ -205,7 +207,7 @@ class Evaluator:
                         all_bad_scores.append(bad_score)
                     
                     # compute the ranking of the good score among all the bad scores, with 0 being the lowest and 1 being the highest
-                    rank = stats.percentileofscore(all_bad_scores, good_score) / 100
+                    rank = stats.percentileofscore(all_bad_scores, good_score, kind='strict') / 100
 
                     self.numeric_reviewer_ranking_scores[criterion].append(rank)
                     average_ranking_score_each_set.append(rank)

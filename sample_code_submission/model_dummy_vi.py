@@ -1,4 +1,5 @@
 """
+ONLY RUN ON BRANCH model_vi
 Sample predictive model.
 You must supply at least 2 methods:
 - generate_papers: calls the API to generate papers using the given prompts.

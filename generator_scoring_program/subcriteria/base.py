@@ -3,18 +3,14 @@ import json
 import openai
 from os.path import isfile
 from abc import ABC, abstractmethod
+import sys
+sys.path.append("..")   
+from config import REASONS 
 
-class Base(ABC):
+class Base(ABC): 
 	def __init__(self):
-		current_real_dir = os.path.dirname(os.path.realpath(__file__))
-		current_real_dir = os.path.dirname(current_real_dir)
-		target_dir = os.path.join(current_real_dir, 'sample_submission_chatgpt_api_key.json')
+		self.reasons = REASONS
 
-		if isfile(target_dir):
-			with open(target_dir, 'rb') as f:
-				openai.api_key = json.load(f)['key']
-		else:
-			print("Warning: no api key file found.")
 	def flatten_dict(self, dictionary, parent_key='', sep='_'):
 		flattened_dict = {}
 		for key, value in dictionary.items():
@@ -41,5 +37,5 @@ class Base(ABC):
 		return paper_str[0:offset] if offset else paper_str
 		
 	@abstractmethod
-	def evaluate(self, paper):
+	def get_evaluation(self, paper):
 		pass

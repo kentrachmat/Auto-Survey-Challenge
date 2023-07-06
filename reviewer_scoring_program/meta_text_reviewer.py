@@ -5,6 +5,8 @@ import random
 import numpy as np
 from collections import defaultdict
 
+from metacriteria.utils import custom_json_loads
+
 from metacriteria.utils import *
 from metacriteria.a_rating import Rating
 from metacriteria.b_precision import Precision
@@ -69,8 +71,16 @@ class MetaTextReviewer:
                     "\}"},
             ]
 
-            answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-            answer = custom_json_loads(answer)
+            success = False
+            while not success:
+                try:
+                    answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
+                    answer = custom_json_loads(answer)
+                    success = True
+                except Exception as e:
+                    print("Error: ", e)
+                    print("Retrying...")
+                    success = False
 
             rating_score = (float(answer["rating_score"]) - 1) / 2
             precision_score = (float(answer["precision_score"]) - 1) / 2
@@ -124,9 +134,16 @@ class MetaTextReviewer:
                     },
             ]
 
-            answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-            print(answer)
-            answer = custom_json_loads(answer)
+            success = False
+            while not success:
+                try:
+                    answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
+                    answer = custom_json_loads(answer)
+                    success = True
+                except Exception as e:
+                    print("Error: ", e)
+                    print("Retrying...")
+                    success = False
 
             rating_reason = answer["rating_reason"]
             precision_reason = answer["precision_reason"]

@@ -2,6 +2,8 @@ import openai
 import tiktoken
 import time 
 import random
+import json
+import json5
 
 def retry_with_exponential_backoff(
 func,
@@ -94,5 +96,34 @@ def ask_chat_gpt(prompt, model="gpt-3.5-turbo-16k", temperature=0, n=1, frequenc
     except Exception as e:
         print("An unexpected error occurred:", e)
         time.sleep(10)
-        return ask_chat_gpt(prompt, model)
+        if model == "gpt-3.5-turbo":
+            return ask_chat_gpt(prompt, model="gpt-3.5-turbo-0301")
+        else:
+            return ask_chat_gpt(prompt, model)
     return response
+
+def custom_json_loads(s: str, strict=False) -> dict:  # type: ignore
+    # TODO: one thing this doesn't handle, is if the unescaped text includes valid JSON - then you're just out of luck
+    try:
+        return json5.loads(s)
+    except:
+        js_str = s
+        prev_pos = -1
+        curr_pos = 0
+        while curr_pos > prev_pos:
+            # after while check, move marker before we overwrite it
+            prev_pos = curr_pos
+            try:
+                return json.loads(js_str, strict=strict)
+            except json.JSONDecodeError as err:
+                curr_pos = err.pos
+                if curr_pos <= prev_pos:
+                    # previous change didn't make progress, so error
+                    raise err
+
+                # find the previous " before e.pos
+                prev_quote_index = js_str.rfind('"', 0, curr_pos)
+                # escape it to \"
+                js_str = js_str[:prev_quote_index] + "\\" + js_str[prev_quote_index:]
+        
+        return js_str

@@ -1,10 +1,10 @@
 import openai
-import json5 as json
+import json
 import os
 import random
 from tqdm.auto import tqdm
 from collections import defaultdict
-from utils import *
+from subcriteria.utils import *
 
 from config import TRUNCATE
 
@@ -55,12 +55,12 @@ class BaselineReviewer:
         print("\nComparing good papers with prediction paper...")
         good_results = []
         for good_paper in tqdm(good_papers):
-            good_result = self.compare_two_paper(good_paper, prediction_paper, json.dumps(criteria))
+            good_result = self.compare_two_paper(good_paper, prediction_paper, prediction_prompt, json.dumps(criteria))
             good_results.append(good_result)
         # Combine good results
         combined_good_result = defaultdict(dict)
         for super_category, super_value in good_results[0].items():
-            if isinstance(super_value, str):
+            if isinstance(super_value, str) or isinstance(super_value, float) or isinstance(super_value, int):
                 for good_result in good_results:
                     if super_category in combined_good_result:
                         combined_good_result[super_category] += int(good_result[super_category]) / len(good_results)
@@ -79,7 +79,7 @@ class BaselineReviewer:
         for super_category, super_value in tqdm(bad_papers.items()):
             if isinstance(super_value, list):
                 for bad_paper in super_value:
-                    result = self.compare_two_paper(bad_paper, prediction_paper, json.dumps({super_category: "[0 if paper 1 is better, 1 if paper 2 is better]"}))
+                    result = self.compare_two_paper(bad_paper, prediction_paper, prediction_prompt, json.dumps({super_category: "0 if paper 1 is better, 1 if paper 2 is better"}))
                     if super_category in combined_bad_result:
                         combined_bad_result[super_category] += int(result[super_category]) / len(super_value)
                     else:
@@ -87,7 +87,7 @@ class BaselineReviewer:
             else:
                 for sub_category, sub_value in super_value.items():
                     for bad_paper in sub_value:
-                        result = self.compare_two_paper(bad_paper, prediction_paper, json.dumps({super_category: {sub_category: "[0 if paper 1 is better, 1 if paper 2 is better]"}}))
+                        result = self.compare_two_paper(bad_paper, prediction_paper, prediction_prompt, json.dumps({super_category: {sub_category: "0 if paper 1 is better, 1 if paper 2 is better"}}))
                         if super_category in combined_bad_result and sub_category in combined_bad_result[super_category]:
                             combined_bad_result[super_category][sub_category] += int(result[super_category][sub_category]) / len(sub_value)
                         else:
@@ -133,10 +133,20 @@ class BaselineReviewer:
             conversation.append({"role": "user", "content":
             f"Please provide a short reason for each score where 0.0 is the lowest and 1.0 is the highest score for each criterion: {criterion}.\n\n" + \
             "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))] + \
-            f"\n\nOutput a json file with a format {temp}"})
+            f"\n\nOutput the result in this JSON format {temp}"})
 
-            result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
-            return json.loads(result)
+            
+
+            success = False
+            while not success:
+                try:
+                    result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+                    return custom_json_loads(result)
+                    success = True
+                except Exception as e:
+                    print("Error: ", e)
+                    print("Retrying...")
+                    success = False
         else:
             conversation.append({"role": "user", "content":
             f"Please provide a short reason for the score {score:.2f} for the criterion: {criterion}:\n" + \
@@ -152,10 +162,18 @@ class BaselineReviewer:
         criterion + \
         "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))]})
 
-        result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
-        return float(result)
+        success = False
+        while not success:
+            try:
+                result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+                return float(result)
+                success = True
+            except Exception as e:
+                print("Error: ", e)
+                print("Retrying...")
+                success = False
 
-    def compare_two_paper(self, paraphrased_paper, prediction_paper, criterion):
+    def compare_two_paper(self, paraphrased_paper, prediction_paper, prediction_prompt, criterion):
         """ Function to compare two papers
         Args:
             paraphrased_paper: paraphrased paper
@@ -182,27 +200,39 @@ class BaselineReviewer:
         else:
             flipped = False
 
-        paraphrased_paper_without_references = json.loads(paraphrased_paper)
+        paraphrased_paper_without_references = custom_json_loads(paraphrased_paper)
         paraphrased_paper_without_references = [x for x in paraphrased_paper_without_references if x['heading'] != 'References']
         paraphrased_paper_without_references = json.dumps(paraphrased_paper_without_references)
 
-        prediction_paper_without_references = json.loads(prediction_paper)
+        prediction_paper_without_references = custom_json_loads(prediction_paper)
         prediction_paper_without_references = [x for x in prediction_paper_without_references if x['heading'] != 'References']
         prediction_paper_without_references = json.dumps(prediction_paper_without_references)
 
         conversation = [{"role": "system", "content": "You are a helpful assistant who will help me compare papers."}]
         conversation.append({"role": "user", "content":
-        f"Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
+        """Below are the details of the subcriteria:
+        Clarity (Correct language): Is the paper written in good English, with correct grammar, and precise vocabulary?
+        Clarity (Organization): Is the paper well organized in meaningful sections and subsections?
+        Clarity (Explanation): Are the concepts clearly explained, with short sentences?
+        Contributions (Coverage): Does the answer provide a comprehensive overview, comparing and contrasting a plurality of viewpoints?
+        Contributions (Title): Does the title of the paper accurately address the prompt?
+        Contributions (Abstract): Does the abstract of the paper accurately reflect the content of the paper?
+        Contributions (Introduction): Does the introduction of the paper accurately reflect the content of the paper?
+        Contributions (Conclusion): Does the conclusion of the paper highlight the main findings of the paper?
+        Soundness (Factuality/ Attribution): Does the answer present accurate facts, supported by citations of authoritative references?
+        Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
+        """ + \
+        f"These 2 papers below are generated using this prompt: {prediction_prompt}. Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
         criterion + \
         "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}'})
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
         while num_tokens_from_messages(conversation) > 8_000:
-            shorter_paraphrased_paper = json.loads(paraphrased_paper_without_references)
+            shorter_paraphrased_paper = custom_json_loads(paraphrased_paper_without_references)
             shorter_paraphrased_paper = shorter_paraphrased_paper[:-1]
             shorter_paraphrased_paper = json.dumps(shorter_paraphrased_paper)
 
-            shorter_prediction_paper = json.loads(prediction_paper_without_references)
+            shorter_prediction_paper = custom_json_loads(prediction_paper_without_references)
             shorter_prediction_paper = shorter_prediction_paper[:-1]
             shorter_prediction_paper = json.dumps(shorter_prediction_paper)
 
@@ -212,14 +242,26 @@ class BaselineReviewer:
             criterion + \
             "The papers:\n{'Paper 1':\n" + shorter_paraphrased_paper + ",\n'Paper 2':\n" + shorter_prediction_paper+ '\n}'})
 
-        result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
-        # If the order of the papers is swapped, flip the result
-        json_result = json.loads(result)
-        if flipped:
-            for super_category, super_value in json_result.items():
-                if isinstance(super_value, str):
-                    json_result[super_category] = str(1 - int(super_value))
-                else:
-                    for sub_category, sub_value in super_value.items():
-                        json_result[super_category][sub_category] = str(1 - int(sub_value))
+        success = False
+        while not success:
+            try:
+                result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+                json_result = custom_json_loads(result)
+
+                # If the order of the papers is swapped, flip the result
+                if flipped:
+                    for super_category, super_value in json_result.items():
+                        if isinstance(super_value, str) or isinstance(super_value, float) or isinstance(super_value, int):
+                            json_result[super_category] = str(1 - int(super_value))
+                        else:
+                            for sub_category, sub_value in super_value.items():
+                                json_result[super_category][sub_category] = str(1 - int(sub_value))
+                                
+                success = True
+            except Exception as e:
+                print("Error: ", e)
+                print("Retrying...")
+                success = False
+
+        
         return json_result 

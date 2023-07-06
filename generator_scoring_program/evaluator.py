@@ -8,18 +8,19 @@ from nltk import sent_tokenize, word_tokenize
 from config import DEBUG, CONTESTANT_MODE, USE_OUR_BASELINE_REVIEWER 
 
 if USE_OUR_BASELINE_REVIEWER:
-    from baseline_reviewer_ours import BaselineReviewer
+    from baseline_reviewer_referee import BaselineReviewer
 else:
     from baseline_reviewer_chatgpt import BaselineReviewer
 
 import numpy as np
-from utils import ask_chat_gpt
+from subcriteria.utils import *
 
 class SuperCategories(Enum):
     CLARITY = 'clarity'
     CONTRIBUTION = 'contribution'
     RESPONSIBILITY = 'responsibility'
-    CONFIDENCE = 'confidence'
+    # CONFIDENCE = 'confidence',
+    SOUNDNESS = 'soundness'
 
 class Evaluator:
     def __init__(self):
@@ -78,12 +79,35 @@ class Evaluator:
         print("Loading generator solutions (good and bad papers)")
         self.generator_solutions = []
         for paper_id in generator_df['id'].values:
-            paraphrased_papers = {'good': [], 'bad': {}}
+            if USE_OUR_BASELINE_REVIEWER:
+                paraphrased_papers = {'good': [], 'bad': {}, 'human': []}
+            else:
+                paraphrased_papers = {'good': [], 'bad': {}}
+
             for paper_filename in tqdm([x for x in os.listdir(os.path.join(GENERATOR_PATH, "papers", str(paper_id))) if x!= ".DS_Store"]):
-                if 'human' in paper_filename:
+                if 'human' in paper_filename and not USE_OUR_BASELINE_REVIEWER:
                     continue
+
+                paper_text = open(os.path.join(GENERATOR_PATH, "papers", str(paper_id), paper_filename), 'r').read()
+
+                if paper_filename.startswith("human") and USE_OUR_BASELINE_REVIEWER:
+                    paper_text = custom_json_loads(paper_text)
+                    paper_text_reformat = [{'heading': 'Title', 'text': paper_text['title']}]
+                    for section in paper_text['sections']:
+                        paper_text_reformat.append({'heading': section['heading'], 'text': section['text']})
+                    paper_references_reformat = []
+                    for reference in paper_text['references']:
+                        paper_references_reformat.append("@article{article1,\n title={"+reference['title']+"}\n}")
+                    paper_text_reformat.append({'heading': 'References', 'text': "\n\n".join(paper_references_reformat)})
+                    paper_text_reformat = json.dumps(paper_text_reformat)
+                    paper_text_reformat = self.truncate_paper(paper_text_reformat)
+                    paraphrased_papers['human'].append(paper_text_reformat)
+
+                    continue
+
                 paper_text = open(os.path.join(GENERATOR_PATH, "papers", str(paper_id), paper_filename), 'r').read()
                 paper_text = self.truncate_paper(paper_text)
+
                 if paper_filename.startswith("good"):
                     paraphrased_papers['good'].append(paper_text)
                 elif paper_filename.startswith("bad"):
@@ -125,7 +149,7 @@ class Evaluator:
         word_count = 0
         if isinstance(prediction, str):
             print("WARNING: prediction is a string. Converting to json.")
-            prediction_json = json.loads(prediction)
+            prediction_json = custom_json_loads(prediction)
         else:
             prediction_json = prediction
         for section in prediction_json:
@@ -133,9 +157,9 @@ class Evaluator:
                 word_count += len(word_tokenize(section['heading'])) + len(word_tokenize(section['text']))
         return word_count
 
-    def truncate_paper(self, paper, max_length=2000):
+    def truncate_paper(self, paper, max_length=2000, return_as_json=False):
         if isinstance(paper, str):
-            paper_json = json.loads(paper)
+            paper_json = custom_json_loads(paper)
         else:
             paper_json = paper
         word_count = self.get_word_count(paper_json)
@@ -149,15 +173,46 @@ class Evaluator:
                         truncated_paper_json.append({'heading': section['heading'], 'text': ' '.join(sent_tokenize(section['text'])[:-1])})
                 paper_json = truncated_paper_json
                 word_count = self.get_word_count(paper_json)
-            return json.dumps(paper_json)
+        if return_as_json:
+            return paper_json
         else:
-            return paper
+            return json.dumps(paper_json)
+
+    def truncate_reference(self, paper, soft_max_num_references=10, hard_max_num_references=15, return_as_json=False):
+        if isinstance(paper, str):
+            paper_json = custom_json_loads(paper)
+        else:
+            paper_json = paper
+        
+        reference_idx = None
+        reference_count = 0
+        reference_list = []
+        for i, section in enumerate(paper_json):
+            if section['heading'] == 'References':
+                reference_idx = i
+                for reference in section['text'].split('\n\n'):
+                    if reference != '':
+                        reference_count += 1
+                        reference_list.append(reference)
+        if reference_count > hard_max_num_references:
+            print("ERROR: reference count is more than " + str(hard_max_num_references) + ". Exiting.")
+            raise ValueError("Reference count is more than " + str(hard_max_num_references) + ".")
+        if reference_count > soft_max_num_references:
+            print("WARNING: reference count is more than " + str(soft_max_num_references) + ". Truncating.")
+            truncated_reference_list = reference_list[:soft_max_num_references]
+            paper_json[reference_idx]['text'] = '\n\n'.join(truncated_reference_list)
+
+        if return_as_json:
+            return paper_json
+        else:
+            return json.dumps(paper_json)
+            
 
     def truncate_generator_predictions(self, soft_max_length=2000, hard_max_length=2500):
         truncate_generator_predictions = []
         for prediction in self.generator_predictions:
             if isinstance(prediction, str):
-                prediction_json = json.loads(prediction)
+                prediction_json = custom_json_loads(prediction)
             else:
                 prediction_json = prediction
             word_count = self.get_word_count(prediction_json)
@@ -169,8 +224,11 @@ class Evaluator:
             
             if word_count > soft_max_length:
                 print("WARNING: prediction is longer than " + str(soft_max_length) + " tokens. Truncating.")
-                prediction_json = self.truncate_paper(prediction_json, max_length=soft_max_length)
+                prediction_json = self.truncate_paper(prediction_json, max_length=soft_max_length, return_as_json=True)
                 print(f"The total word count of the paper (excluding references) is now: {word_count}")
+            
+            prediction_json = self.truncate_reference(prediction_json, return_as_json=True)
+            
             truncate_generator_predictions.append(json.dumps(prediction_json))
         self.generator_predictions = truncate_generator_predictions
 
@@ -194,22 +252,29 @@ class Evaluator:
             solution_papers = self.generator_solutions[i]
             good_papers = solution_papers['good']
             bad_papers = solution_papers['bad'] 
+            if USE_OUR_BASELINE_REVIEWER:
+                human_papers = solution_papers['human'] 
 
             available_criteria = defaultdict(dict)
             for super_category, super_value in solution_papers['bad'].items():
                 if isinstance(super_value, list):
-                    available_criteria[super_category] = "[0 if paper 1 is better, 1 if paper 2 is better]"
+                    available_criteria[super_category] = "0 if paper 1 is better, 1 if paper 2 is better"
                 else:
                     for sub_category in super_value:
-                        available_criteria[super_category][sub_category] = "[0 if paper 1 is better, 1 if paper 2 is better]"
+                        available_criteria[super_category][sub_category] = "0 if paper 1 is better, 1 if paper 2 is better"
 
             print("\nGenerating comments for each generated paper") 
             if DEBUG:
                 generator_score = {'contribution': {'conclusion': 0.583, 'abstract': 0.75, 'title': 0.75, 'coverage': 0.166}, 'responsibility': 0.166, 'clarity': {'explanations': 0.66, 'correctlanguage': 0.16, 'organization': 0.16666666666666666}, 'soundness': {'c1': 0.9, 'c2': 0.8, 'c3': 0.9}, 'confidence': 0.8}
                 html_comment = {'contribution': {'conclusion': "TEST", 'abstract': "TEST", 'title': "TEST", 'coverage': "TEST"}, 'responsibility': "TEST", 'clarity': {'explanations': "TEST", 'correctlanguage': "TEST", 'organization': "TEST"}, 'soundness': {'c1': "TEST", 'c2': "TEST", 'c3': "TEST"}, 'confidence': "TEST"}
             else:
-                generator_score = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
-                html_comment = self.baseline_reviewer.get_html_comments(generator_score, prediction_paper)
+                if USE_OUR_BASELINE_REVIEWER:
+                    answer = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria, human_papers)
+                    generator_score = answer[0]
+                    html_comment = answer[1]
+                else:
+                    generator_score = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
+                    html_comment = self.baseline_reviewer.get_html_comments(generator_score, prediction_paper)
              
             self.generator_scores.append(generator_score)
             self.generator_html_comments.append(html_comment)
@@ -275,6 +340,8 @@ class Evaluator:
                             conversation = [{"role": "system", "content": "You are a helpful assistant who will help me combine all reviews into one. Focus on the text and not the individual score."},
                                             {"role": "user", "content": reason}]
                             reason = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+
+                            
                             
                         html_file.write(f"<li><b>{super_category}</b>: <span style='color:{color};'>{average:.2f}</span><br>&emsp;reason: {reason}</li>\n")
                 else:
