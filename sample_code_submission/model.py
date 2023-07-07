@@ -89,43 +89,50 @@ class model():
 
         review_scores = []
         for i in range(len(papers)):
-            conversation = [
-                {"role": "system", "content": "You are a helpful assistant who will help me review papers."}]
-            conversation.append(
-                {"role": "user", "content": instruction + json.dumps(papers[i])})
+            conversation = [{"role": "system", "content": "You are a helpful assistant who will help me review papers."}]
+            conversation.append({"role": "user", "content": instruction + json.dumps(papers[i])})
 
-            review_score = self.ask_chat_gpt(conversation)
-
-            try:
-                review_score = json.loads(review_score)
-                review_scores.append(review_score)
-                print("reviewing paper", i+1, "out of", len(papers))
-            except:
+            success = False
+            num_trials = 0
+            while success == False and num_trials < 5:
+                try:
+                    review_score = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
+                    review_score = json.loads(review_score)
+                    review_scores.append(review_score)
+                    print("reviewing paper", i+1, "out of", len(papers))
+                    success = True
+                except Exception as e:
+                    print("Error:", e)
+                    num_trials += 1
+            
+            if num_trials == 5:
+                print(f"Error: Exceeded maximum number of trials ({num_trials}). Returning 0 scores.")
                 review_scores.append({
-                    "Responsibility": {
-                        "score": 0,
-                        "comment": ""
-                    },
-                    "Soundness": {
-                        "score": 0,
-                        "comment": ""
-                    },
-                    "Clarity": {
-                        "score": 0,
-                        "comment": ""
-                    },
-                    "Contribution": {
-                        "score": 0,
-                        "comment": ""
-                    },
-                    "Confidence": {
-                        "score": 0,
-                        "comment": ""
-                    }
-                }
-                )
-                print("Error: the response is not a valid json string.")
-                pass
+                                "Responsibility": {
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                                "Soundness": {
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                                "Clarity":{
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                                "Contribution": {
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                                "Overall": {
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                                "Confidence": {
+                                    "score": 0.0,
+                                    "comment": "A comment."
+                                },
+                            })
         return review_scores
 
     def set_api_key(self, api_key):
