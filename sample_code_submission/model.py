@@ -45,19 +45,19 @@ class model():
                 try:
                     body = []
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate survey papers around 2000 words.", f"{prompts[i]} \n\ninstruction: {instruction}")
-                    body = json.loads(self.ask_chat_gpt(conversation))
+                    body = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
                     body_str = ""
                     for item in body:
                         body_str += item["heading"] + "\n" + item["text"] + "\n\n"
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate an abstract based on the text delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"Abstract\",\"text\":\"....\"\}", f'<paper>{body_str}</paper>')
-                    abstract = json.loads(self.ask_chat_gpt(conversation))
+                    abstract = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags.", f'<abstract>{abstract["text"]}</abstract>')
-                    title = {"heading": "Title", "text": self.ask_chat_gpt(conversation)}
+                    title = {"heading": "Title", "text": self.ask_chat_gpt(conversation, temperature=0.2*num_trials)}
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate 13 references in a BibTeX format (without numbering and explanation) based on the provided paper delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"References\",\"text\":\"....\"\}", f'<paper>{body_str}</paper> \n\n Remember in a BibTeX format.')
-                    refs = self.ask_chat_gpt(conversation)
+                    refs = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
                     refs = re.sub(r"\n", r"\\n", refs)
                     refs = re.sub(r"\\&", r"&", refs)
                     refs = re.sub(r"\\~", r"~", refs)
