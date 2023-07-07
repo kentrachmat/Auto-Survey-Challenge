@@ -44,19 +44,19 @@ class model():
             while success == False and num_trials < 5:
                 try:
                     body = []
-                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate survey papers around 2000 words.", f"{prompts[i]} \n\ninstruction: {instruction}")
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate survey papers around 2000 words.", f"You are a helpful assistant who will help me generate a survey paper with 2000 words. " + f"{prompts[i]}\nA good paper should:\n {instruction}")
                     body = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
                     body_str = ""
                     for item in body:
                         body_str += item["heading"] + "\n" + item["text"] + "\n\n"
 
-                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate an abstract based on the text delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"Abstract\",\"text\":\"....\"\}", f'<paper>{body_str}</paper>')
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate a paper abstract.", "You are a helpful assistant who will help me generate a paper abstract based on the text delimited with XML tags. Output the results exclusively in this JSON format: \{\"heading\":\"Abstract\",\"text\":\"....\"\}\n"f'<paper>{body_str}</paper>')
                     abstract = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
 
-                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags.", f'<abstract>{abstract["text"]}</abstract>')
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate a paper title.", "You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags." + f'<abstract>{abstract["text"]}</abstract>')
                     title = {"heading": "Title", "text": self.ask_chat_gpt(conversation, temperature=0.2*num_trials)}
 
-                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate 13 references in a BibTeX format (without numbering and explanation) based on the provided paper delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"References\",\"text\":\"....\"\}", f'<paper>{body_str}</paper> \n\n Remember in a BibTeX format.')
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate paper references.", "You are a helpful assistant who will help me generate references in BibTeX format based on the provided paper delimited with XML tags." + f'<paper>{body_str}</paper> \n' + "Output 10 references in a BibTeX format (without numbering and explanation) exclusively in this JSON format: \{\"heading\":\"References\",\"text\":\"....\"\}",)
                     refs = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
                     refs = re.sub(r"\n", r"\\n", refs)
                     refs = re.sub(r"\\&", r"&", refs)

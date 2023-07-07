@@ -3,4 +3,4 @@
 - Ensure that you are addressing various research questions and make interesting new contributions to the existing field of study. 
 - Use different points of view so that you can compare and contrast relevant data and information.
 - During the discussion, analyze the entire topic and not only one aspect of it.
-- The output should be JSON formatted like [{"heading":"...", "text" : "..."},{"heading":"...", "text" : "..."},...]
+- The output must be exclusively in this JSON format: [{"heading":"...", "text" : "..."},{"heading":"...", "text" : "..."},...]
