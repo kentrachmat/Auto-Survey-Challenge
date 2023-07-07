@@ -11,6 +11,7 @@ import time
 import json
 from os.path import isfile
 import openai
+import tiktoken
 import random
 
 
@@ -72,6 +73,7 @@ class model():
                     success = True
                 except Exception as e:
                     print("Error:", e)
+                    print("Retrying...")
                     num_trials += 1
             if num_trials == 5:
                 print(f"Error: Exceeded maximum number of trials ({num_trials}). Returning an error paper.")
@@ -92,6 +94,8 @@ class model():
             conversation = [{"role": "system", "content": "You are a helpful assistant who will help me review papers."}]
             conversation.append({"role": "user", "content": instruction + json.dumps(papers[i])})
 
+
+
             success = False
             num_trials = 0
             while success == False and num_trials < 5:
@@ -103,6 +107,7 @@ class model():
                     success = True
                 except Exception as e:
                     print("Error:", e)
+                    print("Retrying...")
                     num_trials += 1
             
             if num_trials == 5:
@@ -144,6 +149,11 @@ class model():
         return conversation
 
     def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
+        if num_tokens_from_messages(conversation, model=model) > 8_000:
+            print("Warning: num_tokens_from_messages() is greater than 8_000. Truncating conversation to 8_000 tokens.")
+            while num_tokens_from_messages(conversation, model=model) > 8_000:
+                conversation[-1]["content"] = conversation[-1]["content"][:-1000]
+        
         success = False
         number_trials = 0
         while not success:
@@ -160,3 +170,35 @@ class model():
                     raise e
 
         return response.choices[0]['message']['content']
+
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
+    """Returns the number of tokens used by a list of messages."""
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model == "gpt-3.5-turbo":
+        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
+    elif model == "gpt-4":
+        print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
+        return num_tokens_from_messages(messages, model="gpt-4-0314")
+    elif model == "gpt-3.5-turbo-0301":
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+        tokens_per_name = -1  # if there's a name, the role is omitted
+    elif model == "gpt-4-0314":
+        tokens_per_message = 3
+        tokens_per_name = 1
+    else:
+        raise NotImplementedError(f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+        if key == "name":
+            num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens
