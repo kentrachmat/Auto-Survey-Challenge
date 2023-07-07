@@ -12,51 +12,6 @@ import json
 from os.path import isfile
 import openai
 import random
-
-def retry_with_exponential_backoff(
-    func,
-    initial_delay: float = 1,
-    exponential_base: float = 2,
-    jitter: bool = True,
-    max_retries: int = 15,
-    errors: tuple = (openai.error.RateLimitError,),
-):
-    """Retry a function with exponential backoff."""
-
-    def wrapper(*args, **kwargs):
-        # Initialize variables
-        num_retries = 0
-        delay = initial_delay
-
-        # Loop until a successful response or max_retries is hit or an exception is raised
-        while True:
-            try:
-                return func(*args, **kwargs)
-
-            # Retry on any errors
-            except errors as e:
-                # Increment retries
-                print(f"Error: {e}")
-                num_retries += 1
-
-                # Check if max retries has been reached
-                if num_retries > max_retries:
-                    raise Exception(
-                        f"Maximum number of retries ({max_retries}) exceeded."
-                    )
-
-                # Increment the delay
-                delay *= exponential_base * (1 + jitter * random.random())
-
-                # Sleep for the delay
-                time.sleep(delay)
-
-            # # Raise exceptions for any errors not specified
-            except Exception as e:
-                num_retries += 1
-                pass
-
-    return wrapper
  
 class model():
     def __init__(self):
@@ -72,23 +27,6 @@ class model():
         else:
             print("Warning: no api key file found.")
 
-    def set_api_key(self, api_key):
-        openai.api_key = api_key
-
-    def conversation_generator(self, system, content):
-        conversation = [{"role": "system", "content": system}]
-        conversation.append({"role": "user", "content": content })
-        return conversation
-
-    @retry_with_exponential_backoff
-    def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
-        response = openai.ChatCompletion.create(
-                    model=model,
-                    temperature=temperature,
-                    messages=conversation
-                )
-        return response.choices[0]['message']['content']
-    
     def generate_papers(self, prompts, instruction):
         """
         Arguments:
@@ -179,3 +117,65 @@ class model():
                 print("Error: the response is not a valid json string.")
                 pass
         return review_scores
+
+    def set_api_key(self, api_key):
+        openai.api_key = api_key
+
+    def conversation_generator(self, system, content):
+        conversation = [{"role": "system", "content": system}]
+        conversation.append({"role": "user", "content": content })
+        return conversation
+
+    @retry_with_exponential_backoff
+    def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
+        response = openai.ChatCompletion.create(
+                    model=model,
+                    temperature=temperature,
+                    messages=conversation
+                )
+        return response.choices[0]['message']['content']
+    
+def retry_with_exponential_backoff(
+    func,
+    initial_delay: float = 1,
+    exponential_base: float = 2,
+    jitter: bool = True,
+    max_retries: int = 15,
+    errors: tuple = (openai.error.RateLimitError,),
+):
+    """Retry a function with exponential backoff."""
+
+    def wrapper(*args, **kwargs):
+        # Initialize variables
+        num_retries = 0
+        delay = initial_delay
+
+        # Loop until a successful response or max_retries is hit or an exception is raised
+        while True:
+            try:
+                return func(*args, **kwargs)
+
+            # Retry on any errors
+            except errors as e:
+                # Increment retries
+                print(f"Error: {e}")
+                num_retries += 1
+
+                # Check if max retries has been reached
+                if num_retries > max_retries:
+                    raise Exception(
+                        f"Maximum number of retries ({max_retries}) exceeded."
+                    )
+
+                # Increment the delay
+                delay *= exponential_base * (1 + jitter * random.random())
+
+                # Sleep for the delay
+                time.sleep(delay)
+
+            # # Raise exceptions for any errors not specified
+            except Exception as e:
+                num_retries += 1
+                pass
+
+    return wrapper
