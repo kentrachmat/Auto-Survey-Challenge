@@ -4,9 +4,7 @@ import os
 import random
 from tqdm.auto import tqdm
 from collections import defaultdict
-from subcriteria.utils import *
-
-from config import TRUNCATE
+from utils import *
 
 class BaselineReviewer:
     def __init__(self):
@@ -104,10 +102,6 @@ class BaselineReviewer:
                     combined_result[super_category][sub_category] = 0.5*sub_value + 0.5*combined_bad_result[super_category][sub_category]
 
         print("\nCalculate soundness and confidence...")
-        combined_result['soundness']['c1'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the references are legitimate)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
-        combined_result['soundness']['c2'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the references employed by the paper align well with the content it generates)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
-        combined_result['soundness']['c3'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the paper does not randomly cite unrelated papers, maintaining a coherent academic narrative)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
-        # combined_result['confidence'] = self.compare_one_paper(prediction_paper,'Evaluate the confidence of the paper','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
         
         print("Done calculating soundness and confidence")
         return combined_result
@@ -132,7 +126,7 @@ class BaselineReviewer:
 
             conversation.append({"role": "user", "content":
             f"Please provide a short reason for each score where 0.0 is the lowest and 1.0 is the highest score for each criterion: {criterion}.\n\n" + \
-            "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))] + \
+            "Paper :\n" + prediction_paper + \
             f"\n\nOutput the result in this JSON format {temp}"})
 
             
@@ -152,30 +146,10 @@ class BaselineReviewer:
         else:
             conversation.append({"role": "user", "content":
             f"Please provide a short reason for the score {score:.2f} for the criterion: {criterion}:\n" + \
-            "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))]})
+            "Paper :\n" + prediction_paper})
 
             result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
             return str(result)
-    
-    def compare_one_paper(self, prediction_paper, description, criterion):
-        conversation = [{"role": "system", "content": "You are a helpful assistant who will help me evaluate a paper."}]
-        conversation.append({"role": "user", "content":
-        f"{description} the output of the template must be a single float value, no explanation:\nThe template:\n" + \
-        criterion + \
-        "Paper :\n" + prediction_paper[:(1000 if TRUNCATE else len(prediction_paper))]})
-
-        success = False
-        num_trials = 0
-        while not success and num_trials < 5:
-            try:
-                result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
-                return float(result)
-                success = True
-            except Exception as e:
-                print("Error: ", e)
-                print("Retrying...")
-                num_trials += 1
-                success = False
 
     def compare_two_paper(self, paraphrased_paper, prediction_paper, prediction_prompt, criterion):
         """ Function to compare two papers
@@ -228,7 +202,7 @@ class BaselineReviewer:
         """ + \
         f"These 2 papers below are generated using this prompt: {prediction_prompt}. Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
         criterion + \
-        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}'})
+        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references + ",\n'Paper 2':\n" + prediction_paper_without_references+ '\n}'})
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
         while num_tokens_from_messages(conversation) > 8_000:

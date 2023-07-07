@@ -9,7 +9,7 @@ from sys import argv
 import libscores
 from evaluator import Evaluator
 
-from subcriteria.utils import *
+from utils import *
 
 # Set up default directories and file names:
 ROOT_DIR = "../"
@@ -24,8 +24,6 @@ MISSING_SCORE = -0.999999
 
 # Define scoring version
 SCORING_VERSION = 1.0
-
-from config import DEBUG, CONTESTANT_MODE
 
 
 # Input Processing
@@ -127,8 +125,7 @@ def print_scores_generator(score_title, score, evaluator, overall_generator_scor
         html_file.write(f"<p>Overall score : {overall_generator_score:.2f}</p><br>")
         html_file.write("<br>")
 
-        if CONTESTANT_MODE:
-            description = """
+        description = """
         <h1>Paper Evaluation Description</h1>
         <h2>Criterion: Contribution</h2>
         <p>Description:</p>
@@ -150,36 +147,7 @@ def print_scores_generator(score_title, score, evaluator, overall_generator_scor
         <p>Description:</p>
         <p>The model evaluates its own confidence</p> 
         """
-        else:
-            description = """
-        <h1>Paper Evaluation Description</h1>
-        <h2>Criterion: Contribution</h2>
-        <p>Description:</p>
-        <p>Coverage: Does the answer provide a comprehensive overview, comparing and contrasting a plurality of viewpoints?</p>
-        <p>Title: How well does the title and the abstract addresses the prompt?</p>
-        <p>Abstract: How well does the abstract summarize the paper?</p>
-        <p>Conclusion: How well does the conclusion highlight the main findings of the paper?</p>
 
-        <h2>Criterion: Responsibility</h2>
-        <p>Description:</p>
-        <p>Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?</p>
-
-        <h2>Criterion: Clarity</h2>
-        <p>Description:</p>
-        <p>Correct Language: Is the paper written in good English, with correct grammar, and precise vocabulary?</p>
-        <p>Organization: Is the paper well organized in meaningful sections and subsections?</p>
-        <p>Explanations: Are the concepts clearly explained, with short sentences?</p>
-
-        <h2>Criterion: Soundness</h2>
-        <p>Description:</p>
-        <p>C1 : the correctness of the references cited by the AI</p>
-        <p>C2 : the relevance of the cited papers</p>
-        <p>C3 : the interrelatedness of the cited papers</p>
-        
-        <h2>Criterion: Confidence</h2>
-        <p>Description:</p>
-        <p>The model evaluates its own confidence</p> 
-        """
         html_file.write(description)
 
 

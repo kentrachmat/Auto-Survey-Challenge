@@ -39,44 +39,43 @@ class model():
         """
         generated_papers = []
         for i in range(len(prompts)):
-            try:
-                body = []
-                conversation = self.conversation_generator(
-                    "You are a helpful assistant who will help me generate survey papers around 2000 words.", f"{prompts[i]} \n\ninstruction: {instruction}")
-                body = json.loads(self.ask_chat_gpt(conversation))
-                body_str = ""
-                for item in body:
-                    body_str += item["heading"] + "\n" + item["text"] + "\n\n"
+            success = False
+            num_trials = 0
+            while success == False and num_trials < 5:
+                try:
+                    body = []
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate survey papers around 2000 words.", f"{prompts[i]} \n\ninstruction: {instruction}")
+                    body = json.loads(self.ask_chat_gpt(conversation))
+                    body_str = ""
+                    for item in body:
+                        body_str += item["heading"] + "\n" + item["text"] + "\n\n"
 
-                conversation = self.conversation_generator(
-                    "You are a helpful assistant who will help me generate an abstract based on the text delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"Abstract\",\"text\":\"....\"\}", f'<paper>{body_str}</paper>')
-                abstract = json.loads(self.ask_chat_gpt(conversation))
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate an abstract based on the text delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"Abstract\",\"text\":\"....\"\}", f'<paper>{body_str}</paper>')
+                    abstract = json.loads(self.ask_chat_gpt(conversation))
 
-                conversation = self.conversation_generator(
-                    "You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags.", f'<abstract>{abstract["text"]}</abstract>')
-                title = {"heading": "Title",
-                         "text": self.ask_chat_gpt(conversation)}
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags.", f'<abstract>{abstract["text"]}</abstract>')
+                    title = {"heading": "Title", "text": self.ask_chat_gpt(conversation)}
 
-                conversation = self.conversation_generator(
-                    "You are a helpful assistant who will help me generate 13 references in a BibTeX format (without numbering and explanation) based on the provided paper delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"References\",\"text\":\"....\"\}", f'<paper>{body_str}</paper> \n\n Remember in a BibTeX format.')
-                refs = self.ask_chat_gpt(conversation)
-                refs = re.sub(r"\n", r"\\n", refs)
-                refs = re.sub(r"\\&", r"&", refs)
-                refs = re.sub(r"\\~", r"~", refs)
-                refs = re.sub(r"{\\\'\\i}", r"i", refs)
-                refs = re.sub(r"{\\'e}", r"e", refs)
-                refs = re.sub(r"{\\'o}", r"o", refs)
-                refs = json.loads(refs)
-                final = json.dumps([title]+[abstract]+body+[refs])
-                print("Generated paper:", final)
-                generated_papers.append(final)
-                print("generated paper", i+1, "out of", len(prompts))
-            except Exception as e:
-                generated_papers.append(json.dumps(
-                    {"heading": "Error", "text": "Error: the response is not a valid json string!"}))
-                print("Error: the response is not a valid json string!",
-                      type(e), str(e))
-                pass
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate 13 references in a BibTeX format (without numbering and explanation) based on the provided paper delimited with XML tags. The output should be JSON formatted like \{\"heading\":\"References\",\"text\":\"....\"\}", f'<paper>{body_str}</paper> \n\n Remember in a BibTeX format.')
+                    refs = self.ask_chat_gpt(conversation)
+                    refs = re.sub(r"\n", r"\\n", refs)
+                    refs = re.sub(r"\\&", r"&", refs)
+                    refs = re.sub(r"\\~", r"~", refs)
+                    refs = re.sub(r"{\\\'\\i}", r"i", refs)
+                    refs = re.sub(r"{\\'e}", r"e", refs)
+                    refs = re.sub(r"{\\'o}", r"o", refs)
+                    refs = json.loads(refs)
+                    final = json.dumps([title]+[abstract]+body+[refs])
+                    print("Generated paper:", final)
+                    generated_papers.append(final)
+                    print("generated paper", i+1, "out of", len(prompts))
+                    success = True
+                except Exception as e:
+                    print("Error:", e)
+                    num_trials += 1
+            if num_trials == 5:
+                print(f"Error: Exceeded maximum number of trials ({num_trials}). Returning an error paper.")
+                generated_papers.append(json.dumps([{"heading": "Title", "text": "Error"}, {"heading": "Abstract", "text": "Error"}, {"heading": "Introduction", "text": "Error"}, {"heading": "Related Work", "text": "Error"}, {"heading": "Method", "text": "Error"}, {"heading": "Experiments", "text": "Error"}, {"heading": "Conclusion", "text": "Error"}, {"heading": "References", "text": "Error"}]))
         return generated_papers
 
     def review_papers(self, papers, instruction):

@@ -5,14 +5,13 @@ import pandas as pd
 import json5 as json
 from tqdm.auto import tqdm
 from nltk import sent_tokenize, word_tokenize
-from config import DEBUG, CONTESTANT_MODE, USE_OUR_BASELINE_REVIEWER 
 
-if USE_OUR_BASELINE_REVIEWER:
-    from baseline_reviewer_referee import BaselineReviewer
-else:
-    from baseline_reviewer_chatgpt import BaselineReviewer
+from baseline_reviewer_chatgpt import BaselineReviewer
+
 
 import numpy as np
+
+from utils import *
 
 class SuperCategories(Enum):
     CLARITY = 'clarity'
@@ -78,30 +77,11 @@ class Evaluator:
         print("Loading generator solutions (good and bad papers)")
         self.generator_solutions = []
         for paper_id in generator_df['id'].values:
-            if USE_OUR_BASELINE_REVIEWER:
-                paraphrased_papers = {'good': [], 'bad': {}, 'human': []}
-            else:
-                paraphrased_papers = {'good': [], 'bad': {}}
+
+            paraphrased_papers = {'good': [], 'bad': {}}
 
             for paper_filename in tqdm([x for x in os.listdir(os.path.join(GENERATOR_PATH, "papers", str(paper_id))) if x!= ".DS_Store"]):
-                if 'human' in paper_filename and not USE_OUR_BASELINE_REVIEWER:
-                    continue
-
-                paper_text = open(os.path.join(GENERATOR_PATH, "papers", str(paper_id), paper_filename), 'r').read()
-
-                if paper_filename.startswith("human") and USE_OUR_BASELINE_REVIEWER:
-                    paper_text = custom_json_loads(paper_text)
-                    paper_text_reformat = [{'heading': 'Title', 'text': paper_text['title']}]
-                    for section in paper_text['sections']:
-                        paper_text_reformat.append({'heading': section['heading'], 'text': section['text']})
-                    paper_references_reformat = []
-                    for reference in paper_text['references']:
-                        paper_references_reformat.append("@article{article1,\n title={"+reference['title']+"}\n}")
-                    paper_text_reformat.append({'heading': 'References', 'text': "\n\n".join(paper_references_reformat)})
-                    paper_text_reformat = json.dumps(paper_text_reformat)
-                    paper_text_reformat = self.truncate_paper(paper_text_reformat)
-                    paraphrased_papers['human'].append(paper_text_reformat)
-
+                if 'human' in paper_filename:
                     continue
 
                 paper_text = open(os.path.join(GENERATOR_PATH, "papers", str(paper_id), paper_filename), 'r').read()
@@ -251,8 +231,6 @@ class Evaluator:
             solution_papers = self.generator_solutions[i]
             good_papers = solution_papers['good']
             bad_papers = solution_papers['bad'] 
-            if USE_OUR_BASELINE_REVIEWER:
-                human_papers = solution_papers['human'] 
 
             available_criteria = defaultdict(dict)
             for super_category, super_value in solution_papers['bad'].items():
@@ -263,17 +241,10 @@ class Evaluator:
                         available_criteria[super_category][sub_category] = "0 if paper 1 is better, 1 if paper 2 is better"
 
             print("\nGenerating comments for each generated paper") 
-            if DEBUG:
-                generator_score = {'contribution': {'conclusion': 0.583, 'abstract': 0.75, 'title': 0.75, 'coverage': 0.166}, 'responsibility': 0.166, 'clarity': {'explanations': 0.66, 'correctlanguage': 0.16, 'organization': 0.16666666666666666}, 'soundness': {'c1': 0.9, 'c2': 0.8, 'c3': 0.9}, 'confidence': 0.8}
-                html_comment = {'contribution': {'conclusion': "TEST", 'abstract': "TEST", 'title': "TEST", 'coverage': "TEST"}, 'responsibility': "TEST", 'clarity': {'explanations': "TEST", 'correctlanguage': "TEST", 'organization': "TEST"}, 'soundness': {'c1': "TEST", 'c2': "TEST", 'c3': "TEST"}, 'confidence': "TEST"}
-            else:
-                if USE_OUR_BASELINE_REVIEWER:
-                    answer = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria, human_papers)
-                    generator_score = answer[0]
-                    html_comment = answer[1]
-                else:
-                    generator_score = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
-                    html_comment = self.baseline_reviewer.get_html_comments(generator_score, prediction_paper)
+
+
+            generator_score = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
+            html_comment = self.baseline_reviewer.get_html_comments(generator_score, prediction_paper)
              
             self.generator_scores.append(generator_score)
             self.generator_html_comments.append(html_comment)
@@ -326,35 +297,21 @@ class Evaluator:
                 average = np.mean(values)
                 color = 'red' if average < 0.5 else 'black'
 
-                if CONTESTANT_MODE:
-                    reasons = []
-                    if types is None:
-                        html_file.write(f"<li><b>{super_category}</b>: <span style='color:{color};'>{average:.2f}</span></li>\n")
-                    else:
-                        for sub_category, sub_value in super_value.items():
-                            reasons.append(str(html_comments[super_category][sub_category]))
-                        reason = " || ".join(reasons)
-
-                        if not DEBUG:
-                            conversation = [{"role": "system", "content": "You are a helpful assistant who will help me combine all reviews into one. Focus on the text and not the individual score."},
-                                            {"role": "user", "content": reason}]
-                            reason = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
-
-                            
-                            
-                        html_file.write(f"<li><b>{super_category}</b>: <span style='color:{color};'>{average:.2f}</span><br>&emsp;reason: {reason}</li>\n")
-                else:
+                reasons = []
+                if types is None:
                     html_file.write(f"<li><b>{super_category}</b>: <span style='color:{color};'>{average:.2f}</span></li>\n")
+                else:
                     for sub_category, sub_value in super_value.items():
-                        html_file.write("<ul>\n")
+                        reasons.append(str(html_comments[super_category][sub_category]))
+                    reason = " || ".join(reasons)
 
-                        color = 'red' if sub_value < 0.5 else 'black'
-                        if types is None:
-                            html_file.write(f"<li>{sub_category}: <span style='color:{color};'>{sub_value:.2f}</span></li>\n")
-                        else:
-                            reason = "" if html_comments == "" else html_comments[super_category][sub_category]
-                            html_file.write(f"<li>{sub_category}: <span style='color:{color};'>{sub_value:.2f}</span><br>&emsp;reason: {reason}</li>\n")
-                        html_file.write("</ul>\n")
+                    conversation = [{"role": "system", "content": "You are a helpful assistant who will help me combine all reviews into one. Focus on the text and not the individual score."},
+                                    {"role": "user", "content": reason}]
+                    reason = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+
+                        
+                        
+                    html_file.write(f"<li><b>{super_category}</b>: <span style='color:{color};'>{average:.2f}</span><br>&emsp;reason: {reason}</li>\n")
             
             else:
                 color = 'red' if super_value < 0.5 else 'black'
