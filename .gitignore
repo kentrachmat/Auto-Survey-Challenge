@@ -38,3 +38,4 @@ __pycache__/
 sample_result_submission/*
 *.pickle
 *.predict
+README.ipynb
