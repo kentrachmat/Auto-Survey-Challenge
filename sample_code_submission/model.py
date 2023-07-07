@@ -150,7 +150,7 @@ class model():
 
     def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
         if num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
-            print("Warning: num_tokens_from_messages() is greater than 8_000. Truncating conversation to 8_000 tokens.")
+            #num_tokens_from_messages() is greater than 8_000. Truncating conversation to 8_000 tokens
             while num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
                 conversation[-1]["content"] = conversation[-1]["content"][:-1000]
         
