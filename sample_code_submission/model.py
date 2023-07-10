@@ -57,7 +57,7 @@ class model():
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate a paper title.", "You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags." + f'<abstract>{abstract["text"]}</abstract>')
                     title = {"heading": "Title", "text": self.ask_chat_gpt(conversation, temperature=0.2*num_trials)}
 
-                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate paper references.", "You are a helpful assistant who will help me generate references in BibTeX format based on the provided paper delimited with XML tags." + f'<paper>{body_str}</paper> \n' + "Output 10 references in a BibTeX format (without numbering and explanation) exclusively in this JSON format: \{\"heading\":\"References\",\"text\":\"....\"\}",)
+                    conversation = self.conversation_generator("You are a helpful assistant who will help me generate paper references.", "You are a helpful assistant who will help me generate 10 references in BibTeX format based on the provided paper delimited with XML tags." + f'<paper>{body_str}</paper> \n' + "Output 10 references in a BibTeX format (without numbering and explanation) exclusively in this JSON format: \{\"heading\":\"References\",\"text\":\"....\"\}",)
                     refs = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
                     refs = re.sub(r"\n", r"\\n", refs)
                     refs = re.sub(r"\\&", r"&", refs)
