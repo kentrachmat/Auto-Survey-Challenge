@@ -59,39 +59,31 @@ class MetaTextReviewer:
             correctness_prompt = self.correctness_reviewer.get_prompt_for_evaluation(score, comment)
             recommendation_prompt = self.recommendation_reviewer.get_prompt_for_evaluation(score, comment)
 
-            prompt = [
-                {"role": "system", "content":"You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a grading for the score."},
-                {"role": "user", "content": \
-                    "You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a single number for your assessment in Likert scale from 1 to 3: [1 for No, 2 for More-or-less, 3 for Yes]}. Answer each question below and return the answer in the corresponding JSON format:\n" + \
-                    "\{" + \
-                        "\"rating_score\": \"" + f"{rating_prompt}\"," + \
-                        "\"precision_score\": \"" + f"{precision_prompt}\"," + \
-                        "\"correctness_score\": \"" + f"{correctness_prompt}\"," + \
-                        "\"recommendation_score\": \"" + f"{recommendation_prompt}\"," + \
-                    "\}"},
-            ]
 
-            success = False
-            num_trials = 0
-            while not success and num_trials < 5:
-                try:
-                    answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-                    answer = custom_json_loads(answer)
-                    rating_score = (float(answer["rating_score"]) - 1) / 2
-                    precision_score = (float(answer["precision_score"]) - 1) / 2
-                    correctness_score = (float(answer["correctness_score"]) - 1) / 2
-                    recommendation_score = (float(answer["recommendation_score"]) - 1) / 2
-                    respectfulness_score = self.respectfulness_reviewer.evaluate(score, comment)
+            scores = []
+            for i, metacriteria_prompt in enumerate([rating_prompt, precision_prompt, correctness_prompt, recommendation_prompt]):
+                success = False
+                num_trials = 0
+                while not success and num_trials < 5:
+                    try:
+                        prompt = [
+                            {"role": "system", "content":"You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a grading for the score."},
+                            {"role": "user", "content": \
+                                "You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a single number for your assessment in Likert scale from 1 to 3: [1 for No, 2 for More-or-less, 3 for Yes]}. No explaination needed.\n" + \
+                                metacriteria_prompt}
+                        ]
 
-                    return np.array([rating_score, precision_score, correctness_score, recommendation_score, respectfulness_score])
-                    success = True
-                except Exception as e:
-                    print("Error: ", e)
-                    print("Retrying...")
-                    num_trials += 1
-                    success = False
-
-            
+                        answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
+                        score = (float(answer) - 1) / 2
+                        scores.append(score)
+                        success = True
+                    except Exception as e:
+                        print("Error: ", e)
+                        print("Retrying...")
+                        num_trials += 1
+                        success = False
+            scores.append(self.respectfulness_reviewer.evaluate(score, comment))
+            return np.array(scores)
 
     def get_meta_review_reasons(self, scores_and_comments, meta_review_scores, criteria_to_review):
         meta_review_reasons = {}
