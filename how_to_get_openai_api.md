@@ -25,6 +25,9 @@ After successfully creating and verifying your account:
 4. Label your key for better identification (optional), and click "Create"
 5. Your new API key will be created. Ensure to copy it and store it securely, you won't be able to see it again for security reasons
 
+
+# AFTER OBTAINING THE API KEY, YOU CAN GO BACK AND CONTINUE TO RUN [OUR STARTING KIT](https://colab.research.google.com/drive/1lvnIbdQcXx8vzV4KL62KfWEsQedNArxd?usp=sharing) 
+
 Remember, your API key is confidential. Avoid sharing it, as it provides full access to your OpenAI account. At first you will be given a certain amount of free quota for using it, exceeding this threshold you will have to pay using your own credit card.
 
 ### Step 3: Installing OpenAI's Python client library
