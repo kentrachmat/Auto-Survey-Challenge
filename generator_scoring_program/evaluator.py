@@ -13,7 +13,7 @@ else:
     from baseline_reviewer_chatgpt import BaselineReviewer
 
 import numpy as np
-from subcriteria.utils import *
+from utils import *
 
 class SuperCategories(Enum):
     CLARITY = 'clarity'
