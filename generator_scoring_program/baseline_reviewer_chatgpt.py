@@ -69,10 +69,17 @@ class BaselineReviewer:
             else:
                 for sub_category, sub_value in super_value.items():
                     for good_result in good_results:
-                        if super_category in combined_good_result and sub_category in combined_good_result[super_category]:
-                            combined_good_result[super_category][sub_category] += int(good_result[super_category][sub_category]) / len(good_results)
-                        else:
-                            combined_good_result[super_category][sub_category] = int(good_result[super_category][sub_category]) / len(good_results)
+                        try:
+                            if super_category in combined_good_result and sub_category in combined_good_result[super_category]:
+                                combined_good_result[super_category][sub_category] += int(good_result[super_category][sub_category]) / len(good_results)
+                            else:
+                                combined_good_result[super_category][sub_category] = int(good_result[super_category][sub_category]) / len(good_results)
+                        except:
+                            print("Error: ", good_result)
+                            print("super_category: ", super_category)
+                            print("sub_category: ", sub_category)
+                            print("good_results: ", good_results)
+                            raise Exception
         
         print("\nComparing bad papers with prediction paper...")
         combined_bad_result = defaultdict(dict)
@@ -226,7 +233,7 @@ class BaselineReviewer:
         Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
         """ + \
         f"These 2 papers below are generated using this prompt: {prediction_prompt}. \n" + \
-        "The papers:\n'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))] + '\n'})
+        "The papers:\n'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))] + '\nRemember to return the result in JSON format'})
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
         while num_tokens_from_messages(conversation) > 8_000:
@@ -256,7 +263,7 @@ class BaselineReviewer:
             Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
             """ + \
             f"These 2 papers below are generated using this prompt: {prediction_prompt}. \n" + \
-            "The papers:\n{'Paper 1':\n" + shorter_paraphrased_paper + ",\n'Paper 2':\n" + shorter_prediction_paper+ '\n}'})
+            "The papers:\n{'Paper 1':\n" + shorter_paraphrased_paper + ",\n'Paper 2':\n" + shorter_prediction_paper+ '\n}Remember to return the result in JSON format'})
 
         success = False
         num_trials = 0
