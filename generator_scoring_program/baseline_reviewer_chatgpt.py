@@ -226,8 +226,7 @@ class BaselineReviewer:
         Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
         """ + \
         f"These 2 papers below are generated using this prompt: {prediction_prompt}. \n" + \
-        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}Remember to return the result exclusively in the given template, no explanation:\n' + \
-        criterion })
+        "The papers:\n'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))] + '\n'})
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
         while num_tokens_from_messages(conversation) > 8_000:
@@ -241,8 +240,22 @@ class BaselineReviewer:
 
             conversation = [{"role": "system", "content": "You are a helpful assistant who will help me compare papers."}]
             conversation.append({"role": "user", "content":
-            f"Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
+            "Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
             criterion + \
+            """Below are the details of the subcriteria:
+            Relevance (Correctness): Does the answer address the prompt?
+            Clarity (Correct language): Is the paper written in good English, with correct grammar, and precise vocabulary?
+            Clarity (Organization): Is the paper well organized in meaningful sections and subsections?
+            Clarity (Explanation): Are the concepts clearly explained, with short sentences?
+            Contributions (Coverage): Does the answer provide a comprehensive overview, comparing and contrasting a plurality of viewpoints?
+            Contributions (Title): Does the title of the paper accurately address the prompt?
+            Contributions (Abstract): Does the abstract of the paper accurately reflect the content of the paper?
+            Contributions (Introduction): Does the introduction of the paper accurately reflect the content of the paper?
+            Contributions (Conclusion): Does the conclusion of the paper highlight the main findings of the paper?
+            Soundness (Factuality/ Attribution): Does the answer present accurate facts, supported by citations of authoritative references?
+            Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
+            """ + \
+            f"These 2 papers below are generated using this prompt: {prediction_prompt}. \n" + \
             "The papers:\n{'Paper 1':\n" + shorter_paraphrased_paper + ",\n'Paper 2':\n" + shorter_prediction_paper+ '\n}'})
 
         success = False
