@@ -226,7 +226,8 @@ class BaselineReviewer:
         """ + \
         f"These 2 papers below are generated using this prompt: {prediction_prompt}. Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
         criterion + \
-        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}'})
+        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}Remember to compare these 2 papers and return the result exclusively in the given template, no explanation:\nThe template:\n' + \
+        criterion })
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
         while num_tokens_from_messages(conversation) > 8_000:
