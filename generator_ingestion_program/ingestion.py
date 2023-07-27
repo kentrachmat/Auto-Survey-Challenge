@@ -11,6 +11,7 @@ import os
 from sys import argv, path
 import datetime
 
+
 # Configurations
 VERBOSE = True 
 DEBUG_MODE = 0
@@ -33,13 +34,14 @@ OVERALL_START = time.time()
 THE_DATE = datetime.datetime.now().strftime("%y-%m-%d-%H-%M")
 
 def initialize(input_dir, output_dir, program_dir, submission_dir, data_name):
-    vprint(VERBOSE,  "\n========== Ingestion program version " + str(VERSION) + " ==========\n") 
     vprint(VERBOSE,  "************************************************")
-    vprint(VERBOSE,  "******** Processing dataset " + data_name.capitalize() + " ********")
+    vprint(VERBOSE,  "**************** AI-AUTHOR track ***************")
     vprint(VERBOSE,  "************************************************")
+    vprint(VERBOSE,  "\n============== Ingestion program  ==============\n") 
+    
 
     # Reading and converting data
-    vprint(VERBOSE,  "========= Reading and converting data ==========")
+    vprint(VERBOSE,  "========= Reading data ==========")
     data, meta_data = read_data(input_dir)
 
     return data, meta_data
@@ -63,11 +65,11 @@ def execute_model(generator_X, data):
     return M, generator_Y_hat
 
 
-def save_results(M, data_name, generator_Y_hat, output_dir):
+def save_results(M, data_name, generator_Y_hat, output_dir, ids=None):
     # Saving results
     filename_generator = data_name + f'_generator.predict'
     vprint( VERBOSE, "======== Saving results to: " + output_dir)
-    data_io.write(os.path.join(output_dir,filename_generator), generator_Y_hat)
+    data_io.write(os.path.join(output_dir,filename_generator), generator_Y_hat, ids=ids)
 
     vprint( VERBOSE,  "[+] Results saved, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
     time_spent = time.time() - OVERALL_START 
@@ -82,7 +84,7 @@ def main(input_dir, output_dir, program_dir, submission_dir, data_name):
     data, meta_data = initialize(input_dir, output_dir, program_dir, submission_dir, data_name)
     generator_X = process_data(data)
     M, generator_Y_hat = execute_model(generator_X, data)
-    save_results(M, data_name, generator_Y_hat, output_dir)
+    save_results(M, data_name, generator_Y_hat, output_dir, ids=data["generator"]["ids"])
 
     overall_time_spent = time.time() - OVERALL_START
 
@@ -106,12 +108,12 @@ if __name__=="__main__" and DEBUG_MODE<4:
         submission_dir = os.path.abspath(argv[4])
         data_name = DEFAULT_DATA_NAME
     
-    if VERBOSE: 
-        print("Using input_dir: " + input_dir)
-        print("Using output_dir: " + output_dir)
-        print("Using program_dir: " + program_dir)
-        print("Using submission_dir: " + submission_dir)
-        print("Data name: "+ data_name)
+    # if VERBOSE: 
+    #     print("Using input_dir: " + input_dir)
+    #     print("Using output_dir: " + output_dir)
+    #     print("Using program_dir: " + program_dir)
+    #     print("Using submission_dir: " + submission_dir)
+    #     print("Data name: "+ data_name)
 
     # Add path
     path.append(program_dir)
@@ -121,7 +123,20 @@ if __name__=="__main__" and DEBUG_MODE<4:
     import data_io                      
     from data_io import vprint          
     from data_io import read_data
-    from model import model
+
+    try:
+        from model import model
+    except:
+        print("WARNING: No model.py found. Looking for model.py in one directory lower.")
+        try:
+            available_dirs = os.listdir(submission_dir)
+            # add all directories to path
+            for d in available_dirs:
+                path.append(os.path.join(submission_dir, d))
+            from model import model
+        except:
+            print("ERROR: Could not find model.py. Please add model.py to the submission directory.")
+            exit(0)
     
     # Move old results and create a new output directory
     if SAVE_PREV_RESULTS:

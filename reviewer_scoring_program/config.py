@@ -1,0 +1,2 @@
+DEBUG = False
+SEPARATE_HTML_EACH_PAPER = False

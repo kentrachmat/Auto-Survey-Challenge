@@ -14,6 +14,7 @@ from metacriteria.utils import custom_json_loads
 import libscores
 import yaml
 from evaluator import Evaluator
+from config import SEPARATE_HTML_EACH_PAPER
 
 # Set up default directories and file names:
 ROOT_DIR = "../"
@@ -53,9 +54,9 @@ def create_score_directory(score_dir):
 def compute_scores(evaluator, solution_dir, prediction_dir, data_name):
     """ Compute reviewer and generator scores """
     # try:
-    evaluator.read_reviewer_solutions(solution_dir)
     reviewer_predict_file = os.path.join(prediction_dir, f'{data_name}_reviewer.predict')
-    evaluator.read_reviewer_predictions(reviewer_predict_file)
+    evaluator.read_reviewer_solutions_and_predictions(solution_dir, reviewer_predict_file)
+    
     numeric_reviewer_scores = evaluator.get_numeric_reviewer_scores()
     good_paper_text_reviewer_scores = evaluator.get_good_paper_text_reviewer_scores()
     bad_paper_text_reviewer_scores = evaluator.get_bad_paper_text_reviewer_scores()
@@ -79,18 +80,27 @@ def write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_re
         html_file.write("<p>")
         print_numeric_scores("Average meta-reviewer evaluation of your reviewer's NUMERICAL scores", numeric_reviewer_scores, evaluator, html_file)
         
-        html_file.write(f"<h2>======= Average meta-reviewer evaluation of your reviewer's TEXT comments =======</h2>")
+        html_file.write(f"<h2>Average meta-reviewer evaluation of your reviewer's TEXT comments:</h2><br>")
         
+        # a small note The numbers below are the accuracy of rating good papers better than bad papers
+        # html_file.write("<small>The numbers below are the accuracy of rating good papers better than bad papers</small><br>")
+
         html_file.write("Three best meta-reviews:<br>\n")
         html_file.write("<ol>")
         for i in range(3):
-            html_file.write(f"<li><a href='ai_reviewer_full_papers/best_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+            if SEPARATE_HTML_EACH_PAPER:
+                html_file.write(f"<li><a href='ai_reviewer_full_papers/best_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+            else:
+                html_file.write(f"<li><a href='#best_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
         html_file.write("</ol>")
 
         html_file.write("Three worst meta-reviews:<br>\n")
         html_file.write("<ol>")
         for i in range(3):
-            html_file.write(f"<li><a href='ai_reviewer_full_papers/worst_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+            if SEPARATE_HTML_EACH_PAPER:
+                html_file.write(f"<li><a href='ai_reviewer_full_papers/worst_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+            else:
+                html_file.write(f"<li><a href='#worst_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
         html_file.write("</ol>")
         html_file.write("<br>")
         
@@ -101,7 +111,16 @@ def write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_re
         evaluator.plot_reviewer_scores_to_html(bad_paper_text_reviewer_scores, html_file)
 
 
-        html_file.write("<strong>================================</strong><br>")
+        if not SEPARATE_HTML_EACH_PAPER:
+            for i in range(3):
+                html_file.write(f"<h2 id='best_reviews_paper_{i+1}'>Best meta-reviews {i+1}</h2>")
+                evaluator.write_paper_details_to_html_file(three_highest_score_paper_details[i], html_file, anchor_name=f'best_reviews_paper_{i+1}')
+            for i in range(3):
+                html_file.write(f"<h2 id='worst_reviews_paper_{i+1}'>Worst meta-reviews {i+1}</h2>")
+                evaluator.write_paper_details_to_html_file(three_lowest_score_paper_details[i], html_file, anchor_name=f'worst_reviews_paper_{i+1}')
+
+
+
 
         overall_reviewer_score = evaluator.get_overall_reviewer_scores()
         score_json = {
@@ -110,18 +129,19 @@ def write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_re
         }
         score_file.write(json.dumps(score_json))
         
-    # Make directory for paper details
-    paper_details_dir = os.path.join(score_dir, 'ai_reviewer_full_papers')
-    if not os.path.exists(paper_details_dir):
-        os.makedirs(paper_details_dir)
+    if SEPARATE_HTML_EACH_PAPER:
+        # Make directory for paper details
+        paper_details_dir = os.path.join(score_dir, 'ai_reviewer_full_papers')
+        if not os.path.exists(paper_details_dir):
+            os.makedirs(paper_details_dir)
 
-    for i in range(3):
-        with open(os.path.join(score_dir, 'ai_reviewer_full_papers', f'best_reviews_paper_{i+1}.html'), 'w') as html_file:
-            evaluator.write_paper_details_to_html_file(three_highest_score_paper_details[i], html_file)
+        for i in range(3):
+            with open(os.path.join(score_dir, 'ai_reviewer_full_papers', f'best_reviews_paper_{i+1}.html'), 'w') as html_file:
+                evaluator.write_paper_details_to_html_file(three_highest_score_paper_details[i], html_file)
 
-    for i in range(3):
-        with open(os.path.join(score_dir, 'ai_reviewer_full_papers', f'worst_reviews_paper_{i+1}.html'), 'w') as html_file:
-            evaluator.write_paper_details_to_html_file(three_lowest_score_paper_details[i], html_file)
+        for i in range(3):
+            with open(os.path.join(score_dir, 'ai_reviewer_full_papers', f'worst_reviews_paper_{i+1}.html'), 'w') as html_file:
+                evaluator.write_paper_details_to_html_file(three_lowest_score_paper_details[i], html_file)
 
 
 def print_numeric_scores(score_title, score, evaluator, html_file):
@@ -131,23 +151,26 @@ def print_numeric_scores(score_title, score, evaluator, html_file):
         html_file.write(f"======= {score_title}: ERROR =======\n")
     else:
         print(f"======= {score_title}: =======\n{evaluator.convert_json_score_to_text(score)}================================\n")
-        html_file.write(f"<h2>======= {score_title} =======</h2>")
+        html_file.write(f"<h2>{score_title}:</h2>")
+
+        html_file.write(f"<small><small>The scores below represent for each criterion the accuracy of rating good papers better than bad papers</small></small><br>")
 
         evaluator.write_numeric_json_score_to_html(score, html_file)
 
-        html_file.write(f"<br><small>Score based on rating good papers better than bad papers.</small><br>")
         html_file.write(f"<small><span style='color:red;'>Red</span> means score below 0.5.</small><br>\n")
         html_file.write("<br>")
         # html_file.write("To visualize how well your reviewer differentiated between good and bad papers, we plot the diffence between every pair of good and bad papers below:<br>")
         # The sentence above is too long, write a better one
         html_file.write("Box plot of score diffence between good and bad papers:<br>")
+        html_file.write("<small><small>Each dot represents one pair of good and bad papers. The horizontal axis has no information.</small></small><br>")
         evaluator.plot_difference_of_scores_to_html(html_file)
         # Write a note in smaller text
-        html_file.write("<br><small>Horizontal axis has no information</small><br>")
+        # html_file.write("<br><small>Horizontal axis has no information</small><br>")
 
 def main():
     """ Main function to coordinate scoring """
     start = time.time()
+    print("\n============== Scoring program  ==============\n")
     solution_dir, prediction_dir, score_dir, data_name = process_arguments(argv)
     create_score_directory(score_dir)
     evaluator = Evaluator()

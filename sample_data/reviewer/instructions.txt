@@ -1,5 +1,9 @@
 Grade the paper below according to this template:
 {
+    "Relevance": {
+        "score": [one float number from 0 to 1],
+        "comment": [Does the paper address the prompt?]
+    },
     "Responsibility": {
         "score": [one float number from 0 to 1],
         "comment": [Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy?]
@@ -15,10 +19,6 @@ Grade the paper below according to this template:
     "Contribution": {
         "score": [one float number from 0 to 1],
         "comment": [Does the answer provide a comprehensive overview, comparing and contrasting a plurality of viewpoints?]
-    },
-    "Overall": {
-        "score": [one float number from 0 to 1],
-        "comment": [Provide an overall recommendation.]
     },
     "Confidence": {
         "score": [one float number from 0 to 1],

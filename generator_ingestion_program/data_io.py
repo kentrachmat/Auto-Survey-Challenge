@@ -47,6 +47,8 @@ import random
 #import psutil
 import platform
 
+MIN_NUM_PROMPTS = 5
+
 # ================ Small auxiliary functions =================
 
 def read_data(data_dir, random_state=42):
@@ -105,7 +107,10 @@ def read_data(data_dir, random_state=42):
     with open(os.path.join(GENERATOR_PATH, "instructions.txt")) as f:
         data_dict['generator']['instructions'] = f.read()
 
-    randomized_generator_df = generator_df.sample(n=min(5, len(generator_df)), random_state=random_state)
+    n_samples = len(generator_df)
+    if len(generator_df) > 20:
+        n_samples = min(MIN_NUM_PROMPTS, len(generator_df))
+    randomized_generator_df = generator_df.sample(n=n_samples, random_state=random_state)
     data_dict['generator']['prompts'] = randomized_generator_df['prompt'].values 
     data_dict['generator']['ids'] = randomized_generator_df['id'].values
 
@@ -204,10 +209,12 @@ def vprint(mode, t):
         
 # ================ Output prediction results and prepare code submission =================
         
-def write(filename, predictions):
+def write(filename, predictions, ids=None):
     ''' Write prediction scores in prescribed format'''
     with open(filename, "w") as output_file:
-        for row in predictions:
+        for i, row in enumerate(predictions):
+            if ids is not None:
+                output_file.write(f"ID: {ids[i]}\n")
             if type(row) is not np.ndarray and type(row) is not list:
                 row = [row]
             try:

@@ -106,14 +106,32 @@ def read_data(data_dir, random_state=42):
         data_dict['reviewer']['instructions'] = f.read()
 
     data_dict['reviewer']['ids'] = []
+    data_dict['reviewer']['prompts'] = []
     data_dict['reviewer']['papers'] = []
     
-    all_reviewer_files = glob.glob(os.path.join(REVIEWER_PATH, 'papers', '*.json'))
-    for i in range(len(all_reviewer_files)):
-        paper_id = os.path.basename(all_reviewer_files[i]).split('.')[0]
+    # all_reviewer_files = glob.glob(os.path.join(REVIEWER_PATH, 'papers', '*.json'))
+    # for i in range(len(all_reviewer_files)):
+    #     paper_id = os.path.basename(all_reviewer_files[i]).split('.')[0]
+    #     data_dict['reviewer']['ids'].append(paper_id)
+    #     with open(all_reviewer_files[i]) as f:
+    #         data_dict['reviewer']['papers'].append(json.load(f))
+
+    # Groupby sample 5 group with the same pdf_name from metadata
+    g = data_dict['reviewer']['metadata'].groupby(['pdf_name'])
+
+    n_samples = data_dict['reviewer']['metadata']['pdf_name'].nunique()
+    if data_dict['reviewer']['metadata']['pdf_name'].nunique() > 20:
+        n_samples = min(5, data_dict['reviewer']['metadata']['pdf_name'].nunique())
+    data_dict['reviewer']['metadata'] = data_dict['reviewer']['metadata'][g.ngroup().isin(np.random.choice(g.ngroups, n_samples, replace=False))]
+    
+    # Only read files in the metadata
+    for i in range(len(data_dict['reviewer']['metadata'])):
+        paper_id = str(data_dict['reviewer']['metadata']['id'].iloc[i])
         data_dict['reviewer']['ids'].append(paper_id)
-        with open(all_reviewer_files[i]) as f:
+        data_dict['reviewer']['prompts'].append(data_dict['reviewer']['metadata']['prompt'].iloc[i])
+        with open(os.path.join(REVIEWER_PATH, 'papers', paper_id + '.json')) as f:
             data_dict['reviewer']['papers'].append(json.load(f))
+
 
     print("-------------------------------------")
     print("[+] Data loaded successfully")
@@ -208,10 +226,12 @@ def vprint(mode, t):
         
 # ================ Output prediction results and prepare code submission =================
         
-def write(filename, predictions):
+def write(filename, predictions, ids=None):
     ''' Write prediction scores in prescribed format'''
     with open(filename, "w") as output_file:
-        for row in predictions:
+        for i, row in enumerate(predictions):
+            if ids is not None:
+                output_file.write(f"ID: {ids[i]}\n")
             if type(row) is not np.ndarray and type(row) is not list:
                 row = [row]
             try:

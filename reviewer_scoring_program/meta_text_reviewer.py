@@ -16,7 +16,7 @@ from metacriteria.e_respectfulness import Respectfulness
 
 from tqdm.auto import tqdm
 
-DEBUG = False
+from config import DEBUG
 
 class MetaTextReviewer:
     def __init__(self):
@@ -87,7 +87,7 @@ class MetaTextReviewer:
 
     def get_meta_review_reasons(self, scores_and_comments, meta_review_scores, criteria_to_review):
         meta_review_reasons = {}
-        print("Getting meta-review reasons...")
+        # print("Getting meta-review reasons...")
         for criterion in tqdm(criteria_to_review):
             meta_review_reasons[criterion] = self.get_meta_review_reason(scores_and_comments[criterion], meta_review_scores[criterion], criterion)
 
@@ -133,14 +133,32 @@ class MetaTextReviewer:
             num_trials = 0
             while not success and num_trials < 5:
                 try:
-                    answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
+                    answer = ask_chat_gpt(prompt, temperature=0.2*num_trials)["choices"][0]["message"]["content"]
                     answer = custom_json_loads(answer)
                     success = True
                 except Exception as e:
                     print("Error: ", e)
-                    print("Retrying...")
-                    num_trials += 1
-                    success = False
+                    try:
+                        print("Retrying to reformat the results with chatGPT...")
+                        reformat_prompt = [
+                            {"role": "system", "content":"You are an assitant who will help me reformat the results to JSON format."},
+                            {"role": "user", "content":"Reformat the preliminary results to this JSON format:\n" + \
+                                "\{\n" + \
+                                    "\"rating_reason\" : ...," + \
+                                    "\"precision_reason\" : ...," + \
+                                    "\"correctness_reason\" : ...," + \
+                                    "\"recommendation_reason\" : ...," + \
+                                    "\"respectfulness_reason\" : ..." + \
+                                "\n\}\nPreliminary results: " + str(answer)}
+                        ]
+                        answer = ask_chat_gpt(reformat_prompt)["choices"][0]["message"]["content"]
+                        answer = custom_json_loads(answer)
+                        success = True
+                    except:
+                        print("Retrying to reformat the results with chatGPT failed...")
+                        print("Retrying...")
+                        num_trials += 1
+                        success = False
 
             rating_reason = answer["rating_reason"]
             precision_reason = answer["precision_reason"]
