@@ -85,8 +85,12 @@ class Evaluator:
         with open(generator_predict_file, 'r') as f:
             raw_generator_predictions = f.read().split('\n\n\n\n')[:-1]
             for i, prediction in enumerate(raw_generator_predictions):
-                self.selected_IDs.append(int(raw_generator_predictions[i].split('\n')[0].split('ID: ')[1]))
-                self.generator_predictions.append('\n'.join(raw_generator_predictions[i].split('\n')[1:]))
+                if prediction.startswith("ID: "):
+                    self.selected_IDs.append(int(raw_generator_predictions[i].split('\n')[0].split('ID: ')[1]))
+                    self.generator_predictions.append('\n'.join(raw_generator_predictions[i].split('\n')[1:]))
+                else:
+                    self.selected_IDs.append(i)
+                    self.generator_predictions.append(prediction)
 
 
 

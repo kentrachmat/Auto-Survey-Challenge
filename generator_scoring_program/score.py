@@ -9,7 +9,7 @@ from sys import argv
 import libscores
 from evaluator import Evaluator
 
-from subcriteria.utils import *
+from utils import *
 from config import SEPARATE_HTML_EACH_PAPER
 
 # Set up default directories and file names:

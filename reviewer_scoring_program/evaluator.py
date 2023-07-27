@@ -98,9 +98,14 @@ class Evaluator:
         with open(reviewer_predict_file, 'r') as f:
             raw_reviewer_predictions = f.read().split('\n\n\n\n')[:-1]
             for i, prediction in enumerate(raw_reviewer_predictions):
-                selected_ID = int(raw_reviewer_predictions[i].split('\n')[0].split('ID: ')[1])
-                selected_IDs.append(selected_ID)
-                self.reviewer_predictions[selected_ID] = '\n'.join(raw_reviewer_predictions[i].split('\n')[1:])
+                if prediction.startswith("ID: "):
+                    selected_ID = int(raw_reviewer_predictions[i].split('\n')[0].split('ID: ')[1])
+                    selected_IDs.append(selected_ID)
+                    self.reviewer_predictions[selected_ID] = '\n'.join(raw_reviewer_predictions[i].split('\n')[1:])
+                else:
+                    selected_ID = i
+                    selected_IDs.append(selected_ID)
+                    self.reviewer_predictions[selected_ID] = prediction
 
         # use double quotes instead of single quotes
         loaded_reviewer_predictions = {}
