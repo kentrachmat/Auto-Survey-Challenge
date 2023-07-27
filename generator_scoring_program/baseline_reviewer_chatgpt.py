@@ -4,7 +4,7 @@ import os
 import random
 from tqdm.auto import tqdm
 from collections import defaultdict
-from subcriteria.utils import *
+from utils import *
 
 from config import TRUNCATE
 
