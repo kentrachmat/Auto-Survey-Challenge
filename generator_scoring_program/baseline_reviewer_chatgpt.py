@@ -210,7 +210,8 @@ class BaselineReviewer:
         prediction_paper_without_references = json.dumps(prediction_paper_without_references)
 
         conversation = [{"role": "system", "content": "You are a helpful assistant who will help me compare papers."}]
-        conversation.append({"role": "user", "content":
+        conversation.append({"role": "user", "content": "Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
+        criterion + \
         """Below are the details of the subcriteria:
         Relevance (Correctness): Does the answer address the prompt?
         Clarity (Correct language): Is the paper written in good English, with correct grammar, and precise vocabulary?
@@ -224,9 +225,8 @@ class BaselineReviewer:
         Soundness (Factuality/ Attribution): Does the answer present accurate facts, supported by citations of authoritative references?
         Responsibility: Does the paper address potential risks or ethical issues and is respectful of human moral values, including fairness, and privacy, and is free of libelous or unlawful statements, does not infringe upon the rights of others, or contain material or instructions that might cause harm or injury?
         """ + \
-        f"These 2 papers below are generated using this prompt: {prediction_prompt}. Compare these 2 papers below and return the result using the template, no explanation:\nThe template:\n" + \
-        criterion + \
-        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}Remember to compare these 2 papers and return the result exclusively in the given template, no explanation:\nThe template:\n' + \
+        f"These 2 papers below are generated using this prompt: {prediction_prompt}. \n" + \
+        "The papers:\n{'Paper 1':\n" + paraphrased_paper_without_references[:(1000 if TRUNCATE else len(paraphrased_paper))] + ",\n'Paper 2':\n" + prediction_paper_without_references[:(1000 if TRUNCATE else len(prediction_paper))]+ '\n}Remember to return the result exclusively in the given template, no explanation:\n' + \
         criterion })
 
         # In case when the length of the prompt is too long, we will create a shorter prompt
