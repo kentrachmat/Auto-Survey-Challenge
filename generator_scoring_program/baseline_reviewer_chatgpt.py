@@ -212,6 +212,7 @@ class BaselineReviewer:
         conversation = [{"role": "system", "content": "You are a helpful assistant who will help me compare papers."}]
         conversation.append({"role": "user", "content":
         """Below are the details of the subcriteria:
+        Relevance (Correctness): Does the answer address the prompt?
         Clarity (Correct language): Is the paper written in good English, with correct grammar, and precise vocabulary?
         Clarity (Organization): Is the paper well organized in meaningful sections and subsections?
         Clarity (Explanation): Are the concepts clearly explained, with short sentences?
@@ -247,7 +248,7 @@ class BaselineReviewer:
         num_trials = 0
         while not success and num_trials < 5:
             try:
-                result = ask_chat_gpt(conversation)["choices"][0]["message"]["content"]
+                result = ask_chat_gpt(conversation, temperature=0.2*num_trials)["choices"][0]["message"]["content"]
                 json_result = custom_json_loads(result)
 
                 # If the order of the papers is swapped, flip the result
