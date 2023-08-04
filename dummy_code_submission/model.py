@@ -5,7 +5,6 @@ You must supply at least 2 methods:
 - review_papers: generate a random score for each paper
 """
 
-import random
 import json
  
 class model():
