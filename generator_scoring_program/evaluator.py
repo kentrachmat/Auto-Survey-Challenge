@@ -142,8 +142,8 @@ class Evaluator:
                     paraphrased_papers['good'].append(paper_text)
                 elif paper_filename.startswith("bad"):
                     for super_category in self.super_categories:
-                        if paper_filename.startswith("bad_" + super_category):
-                            if paper_filename.startswith("bad_" + super_category + "_"):
+                        if paper_filename.startswith("bad_" + super_category) :
+                            if paper_filename.startswith("bad_" + super_category + "_") or paper_filename[len("bad_" + super_category)].isdigit():
                                 if super_category not in paraphrased_papers['bad']:
                                     paraphrased_papers['bad'][super_category] = []
                                 paraphrased_papers['bad'][super_category].append(paper_text)
