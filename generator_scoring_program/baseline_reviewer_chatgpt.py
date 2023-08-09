@@ -146,7 +146,7 @@ class BaselineReviewer:
         combined_result['soundness']['c3'] = self.compare_one_paper(prediction_paper,'Evaluate the soundness of the paper (whether the paper does not randomly cite unrelated papers, maintaining a coherent academic narrative)','[float number between [0,1] where 0.0 is the lowest and 1.0 is the highest]')
         print("Done calculating soundness")
 
-        combined_comments = self.baseline_reviewer.get_html_comments(combined_result, prediction_paper)
+        combined_comments = self.get_html_comments(combined_result, prediction_paper)
 
         return [combined_result, combined_comments]
      
