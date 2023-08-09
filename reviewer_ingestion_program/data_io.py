@@ -49,7 +49,7 @@ import platform
 
 # ================ Small auxiliary functions =================
 
-def read_data(data_dir, random_state=42):
+def read_data(data_dir, random_state=42, MIN_NUM_PROMPTS=5):
 
     """ 
     Function to read the data in raw format
@@ -116,12 +116,12 @@ def read_data(data_dir, random_state=42):
     #     with open(all_reviewer_files[i]) as f:
     #         data_dict['reviewer']['papers'].append(json.load(f))
 
-    # Groupby sample 5 group with the same pdf_name from metadata
+    # Groupby sample MIN_NUM_PROMPTS group with the same pdf_name from metadata
     g = data_dict['reviewer']['metadata'].groupby(['pdf_name'])
 
     n_samples = data_dict['reviewer']['metadata']['pdf_name'].nunique()
-    if data_dict['reviewer']['metadata']['pdf_name'].nunique() > 20:
-        n_samples = min(5, data_dict['reviewer']['metadata']['pdf_name'].nunique())
+    if data_dict['reviewer']['metadata']['pdf_name'].nunique() != 10:
+        n_samples = min(MIN_NUM_PROMPTS, data_dict['reviewer']['metadata']['pdf_name'].nunique())
     data_dict['reviewer']['metadata'] = data_dict['reviewer']['metadata'][g.ngroup().isin(np.random.choice(g.ngroups, n_samples, replace=False))]
     
     # Only read files in the metadata
@@ -226,7 +226,7 @@ def vprint(mode, t):
         
 # ================ Output prediction results and prepare code submission =================
         
-def write(filename, predictions, ids=None):
+def write(filename, predictions, ids=None, EVALUATION_MODE='fast'):
     ''' Write prediction scores in prescribed format'''
     with open(filename, "w") as output_file:
         for i, row in enumerate(predictions):
@@ -242,6 +242,8 @@ def write(filename, predictions, ids=None):
                 for val in row:
                     output_file.write('{0} '.format(val))
                 output_file.write('\n\n\n\n')
+        output_file.write(f"EVALUATION_MODE: {EVALUATION_MODE}")
+
             
 
 def zipdir(archivename, basedir, exclude_folders=[], exclude_files=[]):

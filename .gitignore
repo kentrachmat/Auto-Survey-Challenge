@@ -39,3 +39,5 @@ sample_result_submission/*
 *.pickle
 *.predict
 README.ipynb
+Survey_Paper_Challenge_2023_AI_Author.ipynb
+Survey_Paper_Challenge_2023_AI_Reviewer.ipynb

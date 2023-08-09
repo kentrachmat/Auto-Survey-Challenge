@@ -51,7 +51,37 @@ class BaselineReviewer:
                                 }
                 )
             '''
-    
+        # If the prediction paper is {"Title: '', "Abstract": '', "Citations": '', "Introduction": '', "Related work": '', "Method": '', "Experiments": '', "Results": '', "Conclusion": ''}, or similar. Basically no values for the keys. 
+        # Then we return the default values for the comparison result. which is 0 for all the criteria. and no comments.
+        empty_string = True
+        for pred in custom_json_loads(prediction_paper):
+            if pred['text'] != '':
+                empty_string = False
+                break
+
+        if empty_string:
+            comparison_result = {}
+            comparison_comment = {}
+            for category, sub_criteria in criteria.items():
+                if isinstance(sub_criteria, str):
+                    comparison_result[category] = 0.0
+                    comparison_comment[category] = "This is a test response. Please ignore."
+                else:
+                    comparison_result[category] = {}
+                    comparison_comment[category] = {}
+                    for sub_criterion, value in sub_criteria.items():
+                        comparison_result[category][sub_criterion] = 0.0
+                        comparison_comment[category][sub_criterion] = "This is a test response. Please ignore."
+
+            # add soundness
+            comparison_result['soundness'] = {'c1': 0.0, 'c2': 0.0, 'c3': 0.0}
+            comparison_comment['soundness'] = {'c1': "This is a test response. Please ignore.", 'c2': "This is a test response. Please ignore.", 'c3': "This is a test response. Please ignore."}
+
+            # add relevance
+            comparison_result['relevance'] = {'title': 0.0, 'abstract': 0.0, 'citations': 0.0}
+            comparison_comment['relevance'] = {'title': "This is a test response. Please ignore.", 'abstract': "This is a test response. Please ignore.", 'citations': "This is a test response. Please ignore."}
+            return [comparison_result, comparison_comment]
+            
         print("\nComparing good papers with prediction paper...")
         good_results = []
         for good_paper in tqdm(good_papers):

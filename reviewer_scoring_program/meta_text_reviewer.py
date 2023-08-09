@@ -1,5 +1,6 @@
 import openai
 import json5 as json
+import re
 import os
 import random
 import numpy as np
@@ -22,7 +23,7 @@ class MetaTextReviewer:
     def __init__(self):
         current_real_dir = os.path.dirname(os.path.realpath(__file__))
         with open(os.path.join(current_real_dir, 'scoring_program_chatgpt_api_key.json'), 'rb') as f:
-            self.api_key = json.load(f)['key']
+            self.api_key = json.load(f)['key1']
 
         openai.api_key = self.api_key
 
@@ -32,6 +33,12 @@ class MetaTextReviewer:
         self.recommendation_reviewer = Recommendation()
         self.respectfulness_reviewer = Respectfulness()
 
+    def set_api_key(self, name_api_key):
+        current_real_dir = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(current_real_dir, 'scoring_program_chatgpt_api_key.json'), 'rb') as f:
+            self.api_key = json.load(f)[name_api_key]
+        openai.api_key = self.api_key
+        
     def get_meta_review_scores(self, scores_and_comments, criteria_to_review):
         meta_reviews = []
         for score_and_comment in tqdm(scores_and_comments):
@@ -72,9 +79,18 @@ class MetaTextReviewer:
                                 "You are a meta-reviewer who will help me evaluate a paper. You have given a score and a comment. Now you need to provide a single number for your assessment in Likert scale from 1 to 3: [1 for No, 2 for More-or-less, 3 for Yes]}. No explaination needed.\n" + \
                                 metacriteria_prompt}
                         ]
-
+                        
                         answer = ask_chat_gpt(prompt)["choices"][0]["message"]["content"]
-                        score = (float(answer) - 1) / 2
+                        try:
+                            score = (float(answer) - 1) / 2
+                        except:
+                            pattern = r"Assessment: (\d+(\.\d+)?)(/(\d+(\.\d+)?))?"
+                            match = re.search(pattern, answer)
+                            matched = match.group(1, 4)
+                            if matched[1] is None:
+                                score = (float(matched[0]) - 1) / 2
+                            else:
+                                score = float(matched[0]) / float(matched[1])
                         scores.append(score)
                         success = True
                     except Exception as e:

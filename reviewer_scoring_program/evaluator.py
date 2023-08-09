@@ -20,8 +20,11 @@ from metacriteria.utils import custom_json_loads
 
 from meta_text_reviewer import MetaTextReviewer
 
+LIMIT_COMMENT_LENGTH = 2000
+
 class Evaluator:
     def __init__(self):
+        self.EVALUATION_MODE = None
         self.solution_dir = None
         self.super_categories = ['relevance', 'clarity', 'contribution', 'soundness', 'responsibility', 'overall'] #, 'confidence'
 
@@ -96,7 +99,8 @@ class Evaluator:
         selected_IDs = []
         self.reviewer_predictions = {}
         with open(reviewer_predict_file, 'r') as f:
-            raw_reviewer_predictions = f.read().split('\n\n\n\n')[:-1]
+            full_reviewer_predictions = f.read()
+            raw_reviewer_predictions = full_reviewer_predictions.split('\n\n\n\n')[:-1]
             for i, prediction in enumerate(raw_reviewer_predictions):
                 if prediction.startswith("ID: "):
                     selected_ID = int(raw_reviewer_predictions[i].split('\n')[0].split('ID: ')[1])
@@ -106,6 +110,9 @@ class Evaluator:
                     selected_ID = i
                     selected_IDs.append(selected_ID)
                     self.reviewer_predictions[selected_ID] = prediction
+
+            self.EVALUATION_MODE = full_reviewer_predictions.split('\n\n\n\n')[-1].split('EVALUATION_MODE: ')[1]
+            
 
         # use double quotes instead of single quotes
         loaded_reviewer_predictions = {}
@@ -126,6 +133,8 @@ class Evaluator:
             new_prediction = {}
             for key, value in super_value.items():
                 new_key = key.lower().replace(" ", "")
+                if len(value['comment']) >= LIMIT_COMMENT_LENGTH:
+                    raise ValueError("Reviewer prediction comment is too long: " + value['comment'])
                 new_prediction[new_key] = value
             self.reviewer_predictions[super_key] = new_prediction
 
@@ -149,6 +158,15 @@ class Evaluator:
             raise ValueError("Reviewer solutions are not loaded")
         return len(self.reviewer_solutions)
 
+    def get_generic_reviewer_scores(self, code):
+        self.meta_text_reviewer.set_api_key(code)
+        if code == "key1":
+            return self.get_numeric_reviewer_scores()
+        elif code == "key2":
+            return self.get_good_paper_text_reviewer_scores()
+        elif code == "key3":
+            return self.get_bad_paper_text_reviewer_scores()
+        
     def get_numeric_reviewer_scores(self):
         """Get the reviewer scores for each criterion"""
         if self.overall_numeric_reviewer_scores is None:
@@ -269,217 +287,228 @@ class Evaluator:
             self.overall_numeric_reviewer_scores[criterion] = np.mean(self.numeric_reviewer_ranking_scores[criterion])
             if self.overall_numeric_reviewer_scores[criterion] != 0:
                 contrastive_eval_different_than_0 = True
+
+        if self.EVALUATION_MODE == 'full':
+
+            # ============== TEXT REVIEWER RANKING SCORES ==============
+
+            # Get the generated scores and comments for each set of papers
+            all_good_scores_and_comments = []
+            for set_i in range(len(good_scores_ids)):
+                all_good_scores_and_comments.append([self.reviewer_predictions[good_scores_ids[set_i][0]]])
+
+            all_bad_scores_and_comments = {}
+            bad_scores_df = self.reviewer_solutions[self.reviewer_solutions['good_or_bad'].apply(lambda x: 'bad' in x)]
+            bad_scores_ids_as_index = bad_scores_df.groupby('pdf_name')['id'].apply(list)
+            bad_scores_ids_as_index = bad_scores_ids_as_index[good_scores_ids_as_index.index]
+            bad_scores_ids = bad_scores_ids_as_index.values
+            for set_i in range(len(good_scores_ids)):
+                all_bad_scores_and_comments[set_i] = []
+                for bad_j in range(len(bad_scores_ids[set_i])):
+                    all_bad_scores_and_comments[set_i].append(self.reviewer_predictions[bad_scores_ids[set_i][bad_j]])
+
+            # Use the meta text reviewer to get the scores of each set of papers, for each criterion
+            # Good paper set
+            print("(LLM Eval) Evaluating good paper set...")
+            all_meta_review_of_good_scores_and_comments = []
+            for set_i in tqdm(range(len(good_scores_ids))):
+                good_scores_and_comments = all_good_scores_and_comments[set_i]
+
+                # Get the meta-review of the good scores and comments
+                # This will return a list of dictionary, each value in the dictionary coresponds with a list of 5 scores for each criterion:
+                # - A - Score: Is the score consistent with the text feed-back?
+                # - B - Precision (clarity): Is the text feed-back precise (does it point to a specific reason of praise of criticism)?
+                # - C - Correctness (soundness): Is the praise or criticism correct and well substantiated?
+                # - D - Recommendation (contribution): Does the text feed-back provide detailed and actionable recommendations for improvement?
+                # - E - Respectfulness (responsibility): Is the language polite and non discriminatory?
+
+                if contrastive_eval_different_than_0:
+                    meta_review_of_good_scores_and_comments = self.meta_text_reviewer.get_meta_review_scores(good_scores_and_comments, self.super_categories_for_text_reviewer)
+                else:
+                    # Return all 0 scores
+                    meta_review_of_good_scores_and_comments = [{criterion: np.zeros(5) for criterion in self.super_categories_for_text_reviewer}]
+                all_meta_review_of_good_scores_and_comments.append(meta_review_of_good_scores_and_comments)
+            # print("all_meta_review_of_good_scores_and_comments:", all_meta_review_of_good_scores_and_comments)
+            # Bad paper set
+            print("(LLM eval) Evaluating bad paper set...")
+            all_meta_review_of_bad_scores_and_comments = []
+            for set_i in tqdm(range(len(good_scores_ids))):
+                bad_scores_and_comments = all_bad_scores_and_comments[set_i]
+
+                # Get the meta-review of the bad scores and comments
+                # This will return a list of 5 scores for each criterion:
+                # - A - Score: Is the score consistent with the text feed-back?
+                # - B - Precision (clarity): Is the text feed-back precise (does it point to a specific reason of praise of criticism)?
+                # - C - Correctness (soundness): Is the praise or criticism correct and well substantiated?
+                # - D - Recommendation (contribution): Does the text feed-back provide detailed and actionable recommendations for improvement?
+                # - E - Respectfulness (responsibility): Is the language polite and non discriminatory?
+
+                if contrastive_eval_different_than_0:
+                    meta_review_of_bad_scores_and_comments = self.meta_text_reviewer.get_meta_review_scores(bad_scores_and_comments, self.super_categories_for_text_reviewer)
+                else:
+                    # Return all 0 scores
+                    meta_review_of_bad_scores_and_comments = [{criterion: np.zeros(5) for criterion in self.super_categories_for_text_reviewer}]
+                all_meta_review_of_bad_scores_and_comments.append(meta_review_of_bad_scores_and_comments)
+
+            # Calculate the average score of each meta-criterion
+            three_lowest_scores = [np.inf, np.inf, np.inf]
+            three_highest_scores = [-np.inf, -np.inf, -np.inf]
+
+            three_lowest_score_ids = [None, None, None]
+            three_highest_score_ids = [None, None, None]
             
-        # ============== TEXT REVIEWER RANKING SCORES ==============
+            self.three_lowest_score_paper_details = [None, None, None]
+            self.three_highest_score_paper_details = [None, None, None]
+            # Good paper set
+            debug_all_text_meta_review_score_of_each_paper = []
+            self.average_score_of_good_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
+            for set_i in range(len(good_scores_ids)):
+                meta_review_of_good_scores_and_comments = all_meta_review_of_good_scores_and_comments[set_i]
+                for paper_j, meta_review_of_each_paper in enumerate(meta_review_of_good_scores_and_comments):
+                    text_meta_review_score_of_each_paper = np.zeros((len(self.super_categories_for_text_reviewer),5))
+                    for crit_j, criterion in enumerate(self.super_categories_for_text_reviewer):
+                        text_meta_review_score_of_each_paper[crit_j] += meta_review_of_each_paper[criterion]
+                    self.average_score_of_good_papers_text_meta_review += text_meta_review_score_of_each_paper
+                    debug_all_text_meta_review_score_of_each_paper.append(text_meta_review_score_of_each_paper)
+                    average_text_meta_review_score_of_each_paper = np.mean(text_meta_review_score_of_each_paper)
 
-        # Get the generated scores and comments for each set of papers
-        all_good_scores_and_comments = []
-        for set_i in range(len(good_scores_ids)):
-            all_good_scores_and_comments.append([self.reviewer_predictions[good_scores_ids[set_i][0]]])
+                    #Update the lowest score and the lowest score paper
+                    if average_text_meta_review_score_of_each_paper < three_lowest_scores[2]:
+                        # Get the paper id of the lowest score
+                        lowest_score_id = good_scores_ids[set_i][paper_j]
+                        # Get the predicted review of the lowest score
+                        lowest_score_review = self.reviewer_predictions[lowest_score_id]
+                        # # Get the meta-review reason of the lowest score
+                        # lowest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(lowest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
 
-        all_bad_scores_and_comments = {}
-        bad_scores_df = self.reviewer_solutions[self.reviewer_solutions['good_or_bad'].apply(lambda x: 'bad' in x)]
-        bad_scores_ids_as_index = bad_scores_df.groupby('pdf_name')['id'].apply(list)
-        bad_scores_ids_as_index = bad_scores_ids_as_index[good_scores_ids_as_index.index]
-        bad_scores_ids = bad_scores_ids_as_index.values
-        for set_i in range(len(good_scores_ids)):
-            all_bad_scores_and_comments[set_i] = []
-            for bad_j in range(len(bad_scores_ids[set_i])):
-                all_bad_scores_and_comments[set_i].append(self.reviewer_predictions[bad_scores_ids[set_i][bad_j]])
+                        current_position = 1
+                        while current_position >= 0 and average_text_meta_review_score_of_each_paper < three_lowest_scores[current_position]:
+                            three_lowest_scores[current_position] = three_lowest_scores[current_position - 1]
+                            self.three_lowest_score_paper_details[current_position] = self.three_lowest_score_paper_details[current_position - 1]
+                            current_position -= 1
+                        three_lowest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
+                        three_lowest_score_ids[current_position + 1] = lowest_score_id
+                        self.three_lowest_score_paper_details[current_position + 1] = {
+                            "id": lowest_score_id,
+                            "review": lowest_score_review,
+                            "meta_review_score": meta_review_of_each_paper,
+                            # "meta_review_reason": lowest_score_meta_review_reason
+                        }
+                    
+                    # Update the highest score and the highest score paper
+                    if average_text_meta_review_score_of_each_paper > three_highest_scores[2]:
 
-        # Use the meta text reviewer to get the scores of each set of papers, for each criterion
-        # Good paper set
-        print("(LLM Eval) Evaluating good paper set...")
-        all_meta_review_of_good_scores_and_comments = []
-        for set_i in tqdm(range(len(good_scores_ids))):
-            good_scores_and_comments = all_good_scores_and_comments[set_i]
+                        # Get the paper id of the highest score
+                        highest_score_id = good_scores_ids[set_i][paper_j]
+                        # Get the predicted review of the highest score
+                        highest_score_review = self.reviewer_predictions[highest_score_id]
+                        # # Get the meta-review reason of the highest score
+                        # highest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(highest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
 
-            # Get the meta-review of the good scores and comments
-            # This will return a list of dictionary, each value in the dictionary coresponds with a list of 5 scores for each criterion:
-            # - A - Score: Is the score consistent with the text feed-back?
-            # - B - Precision (clarity): Is the text feed-back precise (does it point to a specific reason of praise of criticism)?
-            # - C - Correctness (soundness): Is the praise or criticism correct and well substantiated?
-            # - D - Recommendation (contribution): Does the text feed-back provide detailed and actionable recommendations for improvement?
-            # - E - Respectfulness (responsibility): Is the language polite and non discriminatory?
+                        current_position = 1
+                        while current_position >= 0 and average_text_meta_review_score_of_each_paper > three_highest_scores[current_position]:
+                            three_highest_scores[current_position] = three_highest_scores[current_position - 1]
+                            self.three_highest_score_paper_details[current_position] = self.three_highest_score_paper_details[current_position - 1]
+                            current_position -= 1
+                        three_highest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
+                        three_highest_score_ids[current_position + 1] = highest_score_id
+                        self.three_highest_score_paper_details[current_position + 1] = {
+                            "id": highest_score_id,
+                            "review": highest_score_review,
+                            "meta_review_score": meta_review_of_each_paper,
+                            # "meta_review_reason": highest_score_meta_review_reason
+                        }
 
-            if contrastive_eval_different_than_0:
-                meta_review_of_good_scores_and_comments = self.meta_text_reviewer.get_meta_review_scores(good_scores_and_comments, self.super_categories_for_text_reviewer)
-            else:
-                # Return all 0 scores
-                meta_review_of_good_scores_and_comments = [{criterion: np.zeros(5) for criterion in self.super_categories_for_text_reviewer}]
-            all_meta_review_of_good_scores_and_comments.append(meta_review_of_good_scores_and_comments)
-        # print("all_meta_review_of_good_scores_and_comments:", all_meta_review_of_good_scores_and_comments)
-        # Bad paper set
-        print("(LLM eval) Evaluating bad paper set...")
-        all_meta_review_of_bad_scores_and_comments = []
-        for set_i in tqdm(range(len(good_scores_ids))):
-            bad_scores_and_comments = all_bad_scores_and_comments[set_i]
+            self.average_score_of_good_papers_text_meta_review = self.average_score_of_good_papers_text_meta_review/(len(good_scores_ids) * len(meta_review_of_good_scores_and_comments))
 
-            # Get the meta-review of the bad scores and comments
-            # This will return a list of 5 scores for each criterion:
-            # - A - Score: Is the score consistent with the text feed-back?
-            # - B - Precision (clarity): Is the text feed-back precise (does it point to a specific reason of praise of criticism)?
-            # - C - Correctness (soundness): Is the praise or criticism correct and well substantiated?
-            # - D - Recommendation (contribution): Does the text feed-back provide detailed and actionable recommendations for improvement?
-            # - E - Respectfulness (responsibility): Is the language polite and non discriminatory?
+            # Bad paper set
+            self.average_score_of_bad_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
+            for set_i in range(len(good_scores_ids)):
+                meta_review_of_bad_scores_and_comments = all_meta_review_of_bad_scores_and_comments[set_i]
+                for meta_review_of_each_paper in meta_review_of_bad_scores_and_comments:
+                    text_meta_review_score_of_each_paper = np.zeros((len(self.super_categories_for_text_reviewer),5))
+                    for crit_j, criterion in enumerate(self.super_categories_for_text_reviewer):
+                        text_meta_review_score_of_each_paper[crit_j] += meta_review_of_each_paper[criterion]
+                    self.average_score_of_bad_papers_text_meta_review += text_meta_review_score_of_each_paper
+                    debug_all_text_meta_review_score_of_each_paper.append(text_meta_review_score_of_each_paper)
+                    average_text_meta_review_score_of_each_paper = np.mean(text_meta_review_score_of_each_paper)
 
-            if contrastive_eval_different_than_0:
-                meta_review_of_bad_scores_and_comments = self.meta_text_reviewer.get_meta_review_scores(bad_scores_and_comments, self.super_categories_for_text_reviewer)
-            else:
-                # Return all 0 scores
-                meta_review_of_bad_scores_and_comments = [{criterion: np.zeros(5) for criterion in self.super_categories_for_text_reviewer}]
-            all_meta_review_of_bad_scores_and_comments.append(meta_review_of_bad_scores_and_comments)
+                    # Update the lowest score and the lowest score paper
+                    if average_text_meta_review_score_of_each_paper < three_lowest_scores[2]:
+                        # Get the paper id of the lowest score
+                        lowest_score_id = bad_scores_ids[set_i][paper_j]
+                        # Get the predicted review of the lowest score
+                        lowest_score_review = self.reviewer_predictions[lowest_score_id]
+                        # # Get the meta-review reason of the lowest score
+                        # lowest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(lowest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
 
-        # Calculate the average score of each meta-criterion
-        three_lowest_scores = [np.inf, np.inf, np.inf]
-        three_highest_scores = [-np.inf, -np.inf, -np.inf]
-
-        three_lowest_score_ids = [None, None, None]
-        three_highest_score_ids = [None, None, None]
-        
-        self.three_lowest_score_paper_details = [None, None, None]
-        self.three_highest_score_paper_details = [None, None, None]
-        # Good paper set
-        debug_all_text_meta_review_score_of_each_paper = []
-        self.average_score_of_good_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
-        for set_i in range(len(good_scores_ids)):
-            meta_review_of_good_scores_and_comments = all_meta_review_of_good_scores_and_comments[set_i]
-            for paper_j, meta_review_of_each_paper in enumerate(meta_review_of_good_scores_and_comments):
-                text_meta_review_score_of_each_paper = np.zeros((len(self.super_categories_for_text_reviewer),5))
-                for crit_j, criterion in enumerate(self.super_categories_for_text_reviewer):
-                    text_meta_review_score_of_each_paper[crit_j] += meta_review_of_each_paper[criterion]
-                self.average_score_of_good_papers_text_meta_review += text_meta_review_score_of_each_paper
-                debug_all_text_meta_review_score_of_each_paper.append(text_meta_review_score_of_each_paper)
-                average_text_meta_review_score_of_each_paper = np.mean(text_meta_review_score_of_each_paper)
-
-                #Update the lowest score and the lowest score paper
-                if average_text_meta_review_score_of_each_paper < three_lowest_scores[2]:
-                    # Get the paper id of the lowest score
-                    lowest_score_id = good_scores_ids[set_i][paper_j]
-                    # Get the predicted review of the lowest score
-                    lowest_score_review = self.reviewer_predictions[lowest_score_id]
-                    # # Get the meta-review reason of the lowest score
-                    # lowest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(lowest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
-
-                    current_position = 1
-                    while current_position >= 0 and average_text_meta_review_score_of_each_paper < three_lowest_scores[current_position]:
-                        three_lowest_scores[current_position] = three_lowest_scores[current_position - 1]
-                        self.three_lowest_score_paper_details[current_position] = self.three_lowest_score_paper_details[current_position - 1]
-                        current_position -= 1
-                    three_lowest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
-                    three_lowest_score_ids[current_position + 1] = lowest_score_id
-                    self.three_lowest_score_paper_details[current_position + 1] = {
-                        "id": lowest_score_id,
-                        "review": lowest_score_review,
-                        "meta_review_score": meta_review_of_each_paper,
-                        # "meta_review_reason": lowest_score_meta_review_reason
-                    }
-                
-                # Update the highest score and the highest score paper
-                if average_text_meta_review_score_of_each_paper > three_highest_scores[2]:
-
-                    # Get the paper id of the highest score
-                    highest_score_id = good_scores_ids[set_i][paper_j]
-                    # Get the predicted review of the highest score
-                    highest_score_review = self.reviewer_predictions[highest_score_id]
-                    # # Get the meta-review reason of the highest score
-                    # highest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(highest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
-
-                    current_position = 1
-                    while current_position >= 0 and average_text_meta_review_score_of_each_paper > three_highest_scores[current_position]:
-                        three_highest_scores[current_position] = three_highest_scores[current_position - 1]
-                        self.three_highest_score_paper_details[current_position] = self.three_highest_score_paper_details[current_position - 1]
-                        current_position -= 1
-                    three_highest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
-                    three_highest_score_ids[current_position + 1] = highest_score_id
-                    self.three_highest_score_paper_details[current_position + 1] = {
-                        "id": highest_score_id,
-                        "review": highest_score_review,
-                        "meta_review_score": meta_review_of_each_paper,
-                        # "meta_review_reason": highest_score_meta_review_reason
-                    }
-
-        self.average_score_of_good_papers_text_meta_review = self.average_score_of_good_papers_text_meta_review/(len(good_scores_ids) * len(meta_review_of_good_scores_and_comments))
-
-        # Bad paper set
-        self.average_score_of_bad_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
-        for set_i in range(len(good_scores_ids)):
-            meta_review_of_bad_scores_and_comments = all_meta_review_of_bad_scores_and_comments[set_i]
-            for meta_review_of_each_paper in meta_review_of_bad_scores_and_comments:
-                text_meta_review_score_of_each_paper = np.zeros((len(self.super_categories_for_text_reviewer),5))
-                for crit_j, criterion in enumerate(self.super_categories_for_text_reviewer):
-                    text_meta_review_score_of_each_paper[crit_j] += meta_review_of_each_paper[criterion]
-                self.average_score_of_bad_papers_text_meta_review += text_meta_review_score_of_each_paper
-                debug_all_text_meta_review_score_of_each_paper.append(text_meta_review_score_of_each_paper)
-                average_text_meta_review_score_of_each_paper = np.mean(text_meta_review_score_of_each_paper)
-
-                # Update the lowest score and the lowest score paper
-                if average_text_meta_review_score_of_each_paper < three_lowest_scores[2]:
-                    # Get the paper id of the lowest score
-                    lowest_score_id = bad_scores_ids[set_i][paper_j]
-                    # Get the predicted review of the lowest score
-                    lowest_score_review = self.reviewer_predictions[lowest_score_id]
-                    # # Get the meta-review reason of the lowest score
-                    # lowest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(lowest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
-
-                    current_position = 1
-                    while current_position >= 0 and average_text_meta_review_score_of_each_paper < three_lowest_scores[current_position]:
-                        three_lowest_scores[current_position] = three_lowest_scores[current_position - 1]
-                        self.three_lowest_score_paper_details[current_position] = self.three_lowest_score_paper_details[current_position - 1]
-                        current_position -= 1
-                    three_lowest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
-                    three_lowest_score_ids[current_position + 1] = lowest_score_id
-                    self.three_lowest_score_paper_details[current_position + 1] = {
-                        "id": lowest_score_id,
-                        "review": lowest_score_review,
-                        "meta_review_score": meta_review_of_each_paper,
-                        # "meta_review_reason": lowest_score_meta_review_reason
-                    }
+                        current_position = 1
+                        while current_position >= 0 and average_text_meta_review_score_of_each_paper < three_lowest_scores[current_position]:
+                            three_lowest_scores[current_position] = three_lowest_scores[current_position - 1]
+                            self.three_lowest_score_paper_details[current_position] = self.three_lowest_score_paper_details[current_position - 1]
+                            current_position -= 1
+                        three_lowest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
+                        three_lowest_score_ids[current_position + 1] = lowest_score_id
+                        self.three_lowest_score_paper_details[current_position + 1] = {
+                            "id": lowest_score_id,
+                            "review": lowest_score_review,
+                            "meta_review_score": meta_review_of_each_paper,
+                            # "meta_review_reason": lowest_score_meta_review_reason
+                        }
 
 
-                # Update the highest score and the highest score paper
-                if average_text_meta_review_score_of_each_paper > three_highest_scores[2]:
-                    # Get the paper id of the highest score
-                    highest_score_id = bad_scores_ids[set_i][paper_j]
-                    # Get the predicted review of the highest score
-                    highest_score_review = self.reviewer_predictions[highest_score_id]
-                    # # Get the meta-review reason of the highest score
-                    # highest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(highest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
+                    # Update the highest score and the highest score paper
+                    if average_text_meta_review_score_of_each_paper > three_highest_scores[2]:
+                        # Get the paper id of the highest score
+                        highest_score_id = bad_scores_ids[set_i][paper_j]
+                        # Get the predicted review of the highest score
+                        highest_score_review = self.reviewer_predictions[highest_score_id]
+                        # # Get the meta-review reason of the highest score
+                        # highest_score_meta_review_reason = self.meta_text_reviewer.get_meta_review_reasons(highest_score_review, meta_review_of_each_paper, self.super_categories_for_text_reviewer)
 
-                    current_position = 1
-                    while current_position >= 0 and average_text_meta_review_score_of_each_paper > three_highest_scores[current_position]:
-                        three_highest_scores[current_position] = three_highest_scores[current_position - 1]
-                        self.three_highest_score_paper_details[current_position] = self.three_highest_score_paper_details[current_position - 1]
-                        current_position -= 1
-                    three_highest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
-                    three_highest_score_ids[current_position + 1] = highest_score_id
-                    self.three_highest_score_paper_details[current_position + 1] = {
-                        "id": highest_score_id,
-                        "review": highest_score_review,
-                        "meta_review_score": meta_review_of_each_paper,
-                        # "meta_review_reason": highest_score_meta_review_reason
-                    }
+                        current_position = 1
+                        while current_position >= 0 and average_text_meta_review_score_of_each_paper > three_highest_scores[current_position]:
+                            three_highest_scores[current_position] = three_highest_scores[current_position - 1]
+                            self.three_highest_score_paper_details[current_position] = self.three_highest_score_paper_details[current_position - 1]
+                            current_position -= 1
+                        three_highest_scores[current_position + 1] = average_text_meta_review_score_of_each_paper
+                        three_highest_score_ids[current_position + 1] = highest_score_id
+                        self.three_highest_score_paper_details[current_position + 1] = {
+                            "id": highest_score_id,
+                            "review": highest_score_review,
+                            "meta_review_score": meta_review_of_each_paper,
+                            # "meta_review_reason": highest_score_meta_review_reason
+                        }
 
-        # Now calculate the details of the three highest and lowest score papers
-        for i in range(3):
-            mean_highest_score = 0
-            mean_lowest_score = 0
-            for criterion in self.super_categories_for_text_reviewer:
-                mean_highest_score += np.mean(self.three_highest_score_paper_details[i]["meta_review_score"][criterion])
-                mean_lowest_score += np.mean(self.three_lowest_score_paper_details[i]["meta_review_score"][criterion])
-            if mean_highest_score == 0 and mean_lowest_score == 0:
-                self.three_highest_score_paper_details[i]["meta_review_reason"] = {criterion: ["No reason"]*5 for criterion in self.super_categories_for_text_reviewer}
-                self.three_lowest_score_paper_details[i]["meta_review_reason"] = {criterion: ["No reason"]*5 for criterion in self.super_categories_for_text_reviewer}
-            else:
-                self.three_highest_score_paper_details[i]["meta_review_reason"] = self.meta_text_reviewer.get_meta_review_reasons(self.three_highest_score_paper_details[i]["review"], self.three_highest_score_paper_details[i]["meta_review_score"], self.super_categories_for_text_reviewer)
-                self.three_lowest_score_paper_details[i]["meta_review_reason"] = self.meta_text_reviewer.get_meta_review_reasons(self.three_lowest_score_paper_details[i]["review"], self.three_lowest_score_paper_details[i]["meta_review_score"], self.super_categories_for_text_reviewer)
-        
-        self.average_score_of_bad_papers_text_meta_review = self.average_score_of_bad_papers_text_meta_review/(len(good_scores_ids) * len(meta_review_of_bad_scores_and_comments))
-        
-        # print("###-------------------------------------###")
-        # print("### Detailed Text Reviewer Ranking Scores")
-        # print("###-------------------------------------###")
-        # print(debug_all_text_meta_review_score_of_each_paper)
+            # Now calculate the details of the three highest and lowest score papers
+            for i in range(3):
+                mean_highest_score = 0
+                mean_lowest_score = 0
+                for criterion in self.super_categories_for_text_reviewer:
+                    mean_highest_score += np.mean(self.three_highest_score_paper_details[i]["meta_review_score"][criterion])
+                    mean_lowest_score += np.mean(self.three_lowest_score_paper_details[i]["meta_review_score"][criterion])
+                if mean_highest_score == 0 and mean_lowest_score == 0:
+                    self.three_highest_score_paper_details[i]["meta_review_reason"] = {criterion: ["No reason"]*5 for criterion in self.super_categories_for_text_reviewer}
+                    self.three_lowest_score_paper_details[i]["meta_review_reason"] = {criterion: ["No reason"]*5 for criterion in self.super_categories_for_text_reviewer}
+                else:
+                    self.three_highest_score_paper_details[i]["meta_review_reason"] = self.meta_text_reviewer.get_meta_review_reasons(self.three_highest_score_paper_details[i]["review"], self.three_highest_score_paper_details[i]["meta_review_score"], self.super_categories_for_text_reviewer)
+                    self.three_lowest_score_paper_details[i]["meta_review_reason"] = self.meta_text_reviewer.get_meta_review_reasons(self.three_lowest_score_paper_details[i]["review"], self.three_lowest_score_paper_details[i]["meta_review_score"], self.super_categories_for_text_reviewer)
+            
+            self.average_score_of_bad_papers_text_meta_review = self.average_score_of_bad_papers_text_meta_review/(len(good_scores_ids) * len(meta_review_of_bad_scores_and_comments))
+            
+            # print("###-------------------------------------###")
+            # print("### Detailed Text Reviewer Ranking Scores")
+            # print("###-------------------------------------###")
+            # print(debug_all_text_meta_review_score_of_each_paper)
+
+        elif self.EVALUATION_MODE == 'fast':
+            # Return 0 scores
+            self.average_score_of_good_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
+            self.average_score_of_bad_papers_text_meta_review = np.zeros((len(self.super_categories_for_text_reviewer),5))
+            self.three_lowest_score_paper_details = [{"id": None, "review": None, "meta_review_score": None, "meta_review_reason": None}]*3
+            self.three_highest_score_paper_details = [{"id": None, "review": None, "meta_review_score": None, "meta_review_reason": None}]*3
+        else:
+            raise NotImplementedError("Evaluation mode not implemented")
 
         # Average the scores of text meta-reviewer
         self.overall_text_reviewer_scores = {}
@@ -489,6 +518,7 @@ class Evaluator:
 
         # ============== (NUMERIC + TEXT) REVIEWER SCORES ==============
         self.overall_reviewer_scores = self.overall_numeric_reviewer_scores.copy()
+        
         for criterion in self.overall_text_reviewer_scores:
             self.overall_reviewer_scores[criterion] = (self.overall_text_reviewer_scores[criterion] + self.overall_numeric_reviewer_scores[criterion])/2
 

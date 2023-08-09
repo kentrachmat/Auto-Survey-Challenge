@@ -47,11 +47,9 @@ import random
 #import psutil
 import platform
 
-MIN_NUM_PROMPTS = 5
-
 # ================ Small auxiliary functions =================
 
-def read_data(data_dir, random_state=42):
+def read_data(data_dir, random_state=42, MIN_NUM_PROMPTS=5):
 
     """ 
     Function to read the data in raw format
@@ -108,7 +106,7 @@ def read_data(data_dir, random_state=42):
         data_dict['generator']['instructions'] = f.read()
 
     n_samples = len(generator_df)
-    if len(generator_df) > 20:
+    if len(generator_df) != 10:
         n_samples = min(MIN_NUM_PROMPTS, len(generator_df))
     randomized_generator_df = generator_df.sample(n=n_samples, random_state=random_state)
     data_dict['generator']['prompts'] = randomized_generator_df['prompt'].values 

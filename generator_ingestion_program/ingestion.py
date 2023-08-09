@@ -42,7 +42,7 @@ def initialize(input_dir, output_dir, program_dir, submission_dir, data_name):
 
     # Reading and converting data
     vprint(VERBOSE,  "========= Reading data ==========")
-    data, meta_data = read_data(input_dir)
+    data, meta_data = read_data(input_dir, MIN_NUM_PROMPTS=NUM_PAPERS_TO_GENERATE)
 
     return data, meta_data
 
@@ -126,6 +126,7 @@ if __name__=="__main__" and DEBUG_MODE<4:
 
     try:
         from model import model
+        from cfg import NUM_PAPERS_TO_GENERATE
     except:
         print("WARNING: No model.py found. Looking for model.py in one directory lower.")
         try:
@@ -134,6 +135,7 @@ if __name__=="__main__" and DEBUG_MODE<4:
             for d in available_dirs:
                 path.append(os.path.join(submission_dir, d))
             from model import model
+            from cfg import NUM_PAPERS_TO_GENERATE
         except:
             print("ERROR: Could not find model.py. Please add model.py to the submission directory.")
             exit(0)

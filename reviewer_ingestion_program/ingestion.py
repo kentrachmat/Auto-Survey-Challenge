@@ -41,7 +41,7 @@ def initialize(input_dir, output_dir, program_dir, submission_dir, data_name):
 
     # Reading and converting data
     vprint(VERBOSE,  "========= Reading data ==========")
-    data, meta_data = read_data(input_dir)
+    data, meta_data = read_data(input_dir, MIN_NUM_PROMPTS=NUM_SETS_TO_REVIEW)
 
     return data, meta_data
 
@@ -72,7 +72,7 @@ def save_results(M, data_name, reviewer_Y_hat, output_dir, ids=None):
     filename_generator = data_name + f'_generator.predict'
     filename_reviewer = data_name + f'_reviewer.predict'
     vprint( VERBOSE, "======== Saving results to: " + output_dir)
-    data_io.write(os.path.join(output_dir,filename_reviewer), reviewer_Y_hat, ids=ids)
+    data_io.write(os.path.join(output_dir,filename_reviewer), reviewer_Y_hat, ids=ids, EVALUATION_MODE=EVALUATION_MODE)
 
     vprint( VERBOSE,  "[+] Results saved, time spent so far %5.2f sec" % (time.time() - OVERALL_START))
     time_spent = time.time() - OVERALL_START 
@@ -128,6 +128,7 @@ if __name__=="__main__" and DEBUG_MODE<4:
     from data_io import read_data
     try:
         from model import model
+        from cfg import NUM_SETS_TO_GENERATE, EVALUATION_MODE
     except:
         print("WARNING: No model.py found. Looking for model.py in one directory lower.")
         try:
@@ -136,6 +137,7 @@ if __name__=="__main__" and DEBUG_MODE<4:
             for d in available_dirs:
                 path.append(os.path.join(submission_dir, d))
             from model import model
+            from cfg import NUM_SETS_TO_REVIEW, EVALUATION_MODE
         except:
             print("ERROR: Could not find model.py. Please add model.py to the submission directory.")
             exit(0)

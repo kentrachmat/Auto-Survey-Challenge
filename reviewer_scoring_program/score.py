@@ -3,18 +3,18 @@
 # Usage: python ingestion.py input_dir output_dir scoring_output_dir
 
 import os
-import glob
 import json
 import time
 from sys import argv
-from sklearn.metrics import accuracy_score
-
 from metacriteria.utils import custom_json_loads
-
 import libscores
-import yaml
 from evaluator import Evaluator
 from config import SEPARATE_HTML_EACH_PAPER
+import threading
+
+numeric_reviewer_scores = None
+good_paper_text_reviewer_scores = None
+bad_paper_text_reviewer_scores = None
 
 # Set up default directories and file names:
 ROOT_DIR = "../"
@@ -30,7 +30,6 @@ MISSING_SCORE = -0.999999
 # Define scoring version
 SCORING_VERSION = 1.0
 
-
 def process_arguments(arguments):
     """ Process command line arguments """
     if len(arguments) == 1:  # Default directories
@@ -44,11 +43,23 @@ def process_arguments(arguments):
     else:
         raise ValueError('Wrong number of arguments passed.')
 
-
 def create_score_directory(score_dir):
     """ Create scoring directory if it doesn't exist """
     if not os.path.exists(score_dir):
         os.makedirs(score_dir)
+
+
+def get_numeric_reviewer_scores(evaluator):
+    global numeric_reviewer_scores
+    numeric_reviewer_scores = evaluator.get_generic_reviewer_scores("key1")
+
+def get_good_paper_text_reviewer_scores(evaluator):
+    global good_paper_text_reviewer_scores
+    good_paper_text_reviewer_scores = evaluator.get_generic_reviewer_scores("key2")
+
+def get_bad_paper_text_reviewer_scores(evaluator):
+    global bad_paper_text_reviewer_scores
+    bad_paper_text_reviewer_scores = evaluator.get_generic_reviewer_scores("key3")
 
 
 def compute_scores(evaluator, solution_dir, prediction_dir, data_name):
@@ -56,16 +67,29 @@ def compute_scores(evaluator, solution_dir, prediction_dir, data_name):
     # try:
     reviewer_predict_file = os.path.join(prediction_dir, f'{data_name}_reviewer.predict')
     evaluator.read_reviewer_solutions_and_predictions(solution_dir, reviewer_predict_file)
-    
-    numeric_reviewer_scores = evaluator.get_numeric_reviewer_scores()
-    good_paper_text_reviewer_scores = evaluator.get_good_paper_text_reviewer_scores()
-    bad_paper_text_reviewer_scores = evaluator.get_bad_paper_text_reviewer_scores()
+
+    thread_numeric_scores = threading.Thread(target=get_numeric_reviewer_scores, args=(evaluator,))
+    thread_good_scores = threading.Thread(target=get_good_paper_text_reviewer_scores, args=(evaluator,))
+    thread_bad_scores = threading.Thread(target=get_bad_paper_text_reviewer_scores, args=(evaluator,))
+
+    thread_numeric_scores.start()
+    thread_good_scores.start()
+    thread_bad_scores.start()
+
+    thread_numeric_scores.join()
+    thread_good_scores.join()
+    thread_bad_scores.join()
+
+    # numeric_reviewer_scores = evaluator.get_numeric_reviewer_scores()
+    # good_paper_text_reviewer_scores = evaluator.get_good_paper_text_reviewer_scores()
+    # bad_paper_text_reviewer_scores = evaluator.get_bad_paper_text_reviewer_scores()
+
     three_highest_score_paper_details = evaluator.get_three_highest_score_paper_details()
     three_lowest_score_paper_details = evaluator.get_three_lowest_score_paper_details()
     return numeric_reviewer_scores, good_paper_text_reviewer_scores, bad_paper_text_reviewer_scores, three_highest_score_paper_details, three_lowest_score_paper_details
 
 
-def write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_reviewer_scores, bad_paper_text_reviewer_scores, three_highest_score_paper_details, three_lowest_score_paper_details, evaluator, duration):
+def write_to_output_files(score_dir, numeric_reviewer_scores_output, good_paper_text_reviewer_scores_output, bad_paper_text_reviewer_scores_output, three_highest_score_paper_details, three_lowest_score_paper_details, evaluator, duration):
     """ Write output results to JSON and HTML files """
     with open(os.path.join(score_dir, 'scores.json'), 'w') as score_file, \
          open(os.path.join(score_dir, 'scores_ai_reviewer.html'), 'w') as html_file:
@@ -78,46 +102,50 @@ def write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_re
 
 
         html_file.write("<p>")
+
         print_numeric_scores("Average meta-reviewer evaluation of your reviewer's NUMERICAL scores", numeric_reviewer_scores, evaluator, html_file)
-        
-        html_file.write(f"<h2>Average meta-reviewer evaluation of your reviewer's TEXT comments:</h2><br>")
-        
-        # a small note The numbers below are the accuracy of rating good papers better than bad papers
-        # html_file.write("<small>The numbers below are the accuracy of rating good papers better than bad papers</small><br>")
 
-        html_file.write("Three best meta-reviews:<br>\n")
-        html_file.write("<ol>")
-        for i in range(3):
-            if SEPARATE_HTML_EACH_PAPER:
-                html_file.write(f"<li><a href='ai_reviewer_full_papers/best_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
-            else:
-                html_file.write(f"<li><a href='#best_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
-        html_file.write("</ol>")
+        if evaluator.EVALUATION_MODE == 'full':
+            
+            
+            html_file.write(f"<h2>Average meta-reviewer evaluation of your reviewer's TEXT comments:</h2><br>")
+            
+            # a small note The numbers below are the accuracy of rating good papers better than bad papers
+            # html_file.write("<small>The numbers below are the accuracy of rating good papers better than bad papers</small><br>")
 
-        html_file.write("Three worst meta-reviews:<br>\n")
-        html_file.write("<ol>")
-        for i in range(3):
-            if SEPARATE_HTML_EACH_PAPER:
-                html_file.write(f"<li><a href='ai_reviewer_full_papers/worst_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
-            else:
-                html_file.write(f"<li><a href='#worst_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
-        html_file.write("</ol>")
-        html_file.write("<br>")
-        
-        html_file.write("Average evaluation of GOOD papers:<br><br>")
-        evaluator.plot_reviewer_scores_to_html(good_paper_text_reviewer_scores, html_file)
-        html_file.write("<br>\n")
-        html_file.write("Average evaluation of BAD papers:<br><br>")
-        evaluator.plot_reviewer_scores_to_html(bad_paper_text_reviewer_scores, html_file)
-
-
-        if not SEPARATE_HTML_EACH_PAPER:
+            html_file.write("Three best meta-reviews:<br>\n")
+            html_file.write("<ol>")
             for i in range(3):
-                html_file.write(f"<h2 id='best_reviews_paper_{i+1}'>Best meta-reviews {i+1}</h2>")
-                evaluator.write_paper_details_to_html_file(three_highest_score_paper_details[i], html_file, anchor_name=f'best_reviews_paper_{i+1}')
+                if SEPARATE_HTML_EACH_PAPER:
+                    html_file.write(f"<li><a href='ai_reviewer_full_papers/best_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+                else:
+                    html_file.write(f"<li><a href='#best_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
+            html_file.write("</ol>")
+
+            html_file.write("Three worst meta-reviews:<br>\n")
+            html_file.write("<ol>")
             for i in range(3):
-                html_file.write(f"<h2 id='worst_reviews_paper_{i+1}'>Worst meta-reviews {i+1}</h2>")
-                evaluator.write_paper_details_to_html_file(three_lowest_score_paper_details[i], html_file, anchor_name=f'worst_reviews_paper_{i+1}')
+                if SEPARATE_HTML_EACH_PAPER:
+                    html_file.write(f"<li><a href='ai_reviewer_full_papers/worst_reviews_paper_{i+1}.html'>Paper {i+1}</a></li>")
+                else:
+                    html_file.write(f"<li><a href='#worst_reviews_paper_{i+1}'>Paper {i+1}</a></li>")
+            html_file.write("</ol>")
+            html_file.write("<br>")
+            
+            html_file.write("Average evaluation of GOOD papers:<br><br>")
+            evaluator.plot_reviewer_scores_to_html(good_paper_text_reviewer_scores, html_file)
+            html_file.write("<br>\n")
+            html_file.write("Average evaluation of BAD papers:<br><br>")
+            evaluator.plot_reviewer_scores_to_html(bad_paper_text_reviewer_scores, html_file)
+
+
+            if not SEPARATE_HTML_EACH_PAPER:
+                for i in range(3):
+                    html_file.write(f"<h2 id='best_reviews_paper_{i+1}'>Best meta-reviews {i+1}</h2>")
+                    evaluator.write_paper_details_to_html_file(three_highest_score_paper_details[i], html_file, anchor_name=f'best_reviews_paper_{i+1}')
+                for i in range(3):
+                    html_file.write(f"<h2 id='worst_reviews_paper_{i+1}'>Worst meta-reviews {i+1}</h2>")
+                    evaluator.write_paper_details_to_html_file(three_lowest_score_paper_details[i], html_file, anchor_name=f'worst_reviews_paper_{i+1}')
 
 
 
@@ -175,8 +203,8 @@ def main():
     create_score_directory(score_dir)
     evaluator = Evaluator()
 
-    numeric_reviewer_scores, good_paper_text_reviewer_scores, bad_paper_text_reviewer_scores, three_highest_score_paper_details, three_lowest_score_paper_details = compute_scores(evaluator, solution_dir, prediction_dir, data_name)
-    write_to_output_files(score_dir, numeric_reviewer_scores, good_paper_text_reviewer_scores, bad_paper_text_reviewer_scores, three_highest_score_paper_details, three_lowest_score_paper_details, evaluator, duration=time.time() - start)
+    numeric_reviewer_scores_output, good_paper_text_reviewer_scores_output, bad_paper_text_reviewer_scores_output, three_highest_score_paper_details, three_lowest_score_paper_details = compute_scores(evaluator, solution_dir, prediction_dir, data_name)
+    write_to_output_files(score_dir, numeric_reviewer_scores_output, good_paper_text_reviewer_scores_output, bad_paper_text_reviewer_scores_output, three_highest_score_paper_details, three_lowest_score_paper_details, evaluator, duration=time.time() - start)
 
     if DEBUG_MODE > 1:
         libscores.show_platform()
