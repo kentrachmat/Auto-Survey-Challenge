@@ -105,8 +105,9 @@ class model():
         if isfile(target_dir):
             with open(target_dir, 'rb') as f:
                 openai.api_key = json.load(f)['key']
-        else:
-            print("Warning: no api key file found.")
+        if not isfile(target_dir) or openai.api_key == "":
+            print("Error: no api key file found. Please follow this instruction to obtain one: https://github.com/kentrachmat/public_ai_paper_challenge_codabench/blob/master/how_to_get_openai_api.md")
+            raise Exception("Error: no api key file found.")
 
     def set_api_key(self, api_key):
         """
