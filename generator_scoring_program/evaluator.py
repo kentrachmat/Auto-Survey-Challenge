@@ -16,6 +16,7 @@ import numpy as np
 from utils import *
 
 class SuperCategories(Enum):
+    RELEVANCE = 'relevance'
     CLARITY = 'clarity'
     CONTRIBUTION = 'contribution'
     RESPONSIBILITY = 'responsibility'
