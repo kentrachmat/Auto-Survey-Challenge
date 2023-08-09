@@ -323,11 +323,15 @@ class Evaluator:
         generator_score_no_relevance = 0
         generator_relevance_score = 0
         num_criteria_without_relevance = len(self.overall_generator_score)
+        if "relevance" in self.overall_generator_score:
+            num_criteria_without_relevance -= 1
+            if isinstance(self.overall_generator_score["relevance"], dict):
+                for _, sub_value in self.overall_generator_score["relevance"].items():
+                    generator_relevance_score += sub_value / len(self.overall_generator_score["relevance"])
+            else:
+                generator_relevance_score = self.overall_generator_score["relevance"]
         for key, super_value in self.overall_generator_score.items():
             if key == "relevance":
-                num_criteria_without_relevance -= 1
-                for _, sub_value in super_value.items():
-                    generator_relevance_score += sub_value / len(super_value)
                 continue
             if isinstance(super_value, dict):
                 for _, sub_value in super_value.items():
