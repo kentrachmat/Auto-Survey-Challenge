@@ -291,11 +291,10 @@ class Evaluator:
             else:
                 if USE_OUR_BASELINE_REVIEWER:
                     answer = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria, human_papers)
-                    generator_score = answer[0]
-                    html_comment = answer[1]
                 else:
-                    generator_score = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
-                    html_comment = self.baseline_reviewer.get_html_comments(generator_score, prediction_paper)
+                    answer = self.baseline_reviewer.compare_papers(good_papers, bad_papers, prediction_paper, prediction_prompt, available_criteria)
+                generator_score = answer[0]
+                html_comment = answer[1]
              
             self.generator_scores.append(generator_score)
             self.generator_html_comments.append(html_comment)
