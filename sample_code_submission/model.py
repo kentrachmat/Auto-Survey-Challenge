@@ -61,7 +61,7 @@ def retry_with_exponential_backoff(
     return wrapper
  
 # count the number of tokens in a message 
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
     """Returns the number of tokens used by a list of messages."""
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     try:
@@ -70,8 +70,8 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
         print("Warning: model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
     if model == "gpt-3.5-turbo":
-        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
-        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
+        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo")
     elif model == "gpt-4":
         print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
         return num_tokens_from_messages(messages, model="gpt-4-0314")
@@ -130,9 +130,9 @@ class model():
 
     @retry_with_exponential_backoff
     def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
-        if num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
+        if num_tokens_from_messages(conversation, model="gpt-3.5-turbo") > 8_000:
             #num_tokens_from_messages() is greater than 8_000. Truncating conversation to 8_000 tokens
-            while num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
+            while num_tokens_from_messages(conversation, model="gpt-3.5-turbo") > 8_000:
                 conversation[-1]["content"] = conversation[-1]["content"][:-1000]
         response = openai.ChatCompletion.create(
                     model=model,
