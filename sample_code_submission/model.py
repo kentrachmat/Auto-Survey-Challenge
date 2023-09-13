@@ -69,9 +69,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
     except KeyError:
         print("Warning: model not found. Using cl100k_base encoding.")
         encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-3.5-turbo":
-        return num_tokens_from_messages(messages, model="gpt-3.5-turbo")
-    elif model == "gpt-4":
+    if model == "gpt-4":
         return num_tokens_from_messages(messages, model="gpt-4-0314")
     elif model == "gpt-3.5-turbo-0301":
         tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
