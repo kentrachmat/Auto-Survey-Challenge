@@ -14,86 +14,6 @@ import openai
 import tiktoken
 import random
 
-# decorator to retry the function if it fails
-def retry_with_exponential_backoff(
-    func,
-    initial_delay: float = 1,
-    exponential_base: float = 2,
-    jitter: bool = True,
-    max_retries: int = 15,
-    errors: tuple = (openai.error.RateLimitError,),
-):
-    """Retry a function with exponential backoff."""
-
-    def wrapper(*args, **kwargs):
-        # Initialize variables
-        num_retries = 0
-        delay = initial_delay
-
-        # Loop until a successful response or max_retries is hit or an exception is raised
-        while True:
-            try:
-                return func(*args, **kwargs)
-
-            # Retry on any errors
-            except errors as e:
-                # Increment retries
-                print(f"Error: {e}")
-                num_retries += 1
-
-                # Check if max retries has been reached
-                if num_retries > max_retries:
-                    raise Exception(
-                        f"Maximum number of retries ({max_retries}) exceeded."
-                    )
-
-                # Increment the delay
-                delay *= exponential_base * (1 + jitter * random.random())
-
-                # Sleep for the delay
-                time.sleep(delay)
-
-            # # Raise exceptions for any errors not specified
-            except Exception as e:
-                num_retries += 1
-                pass
-
-    return wrapper
- 
-# count the number of tokens in a message 
-def num_tokens_from_messages(messages, model="gpt-3.5-turbo"):
-    """Returns the number of tokens used by a list of messages."""
-    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-    try:
-        encoding = tiktoken.encoding_for_model(model)
-    except KeyError:
-        print("Warning: model not found. Using cl100k_base encoding.")
-        encoding = tiktoken.get_encoding("cl100k_base")
-    if model == "gpt-3.5-turbo":
-        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo.")
-        return num_tokens_from_messages(messages, model="gpt-3.5-turbo")
-    elif model == "gpt-4":
-        print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
-        return num_tokens_from_messages(messages, model="gpt-4-0314")
-    elif model == "gpt-3.5-turbo-0301":
-        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        tokens_per_name = -1  # if there's a name, the role is omitted
-    elif model == "gpt-4-0314":
-        tokens_per_message = 3
-        tokens_per_name = 1
-    else:
-        raise NotImplementedError(f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
-    num_tokens = 0
-    for message in messages:
-        num_tokens += tokens_per_message
-        for key, value in message.items():
-            num_tokens += len(encoding.encode(value))
-        if key == "name":
-            num_tokens += tokens_per_name
-    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
-    return num_tokens
-
-
 class model():
     def __init__(self):
         """
@@ -106,33 +26,21 @@ class model():
             with open(target_dir, 'rb') as f:
                 openai.api_key = json.load(f)['key']
         if not isfile(target_dir) or openai.api_key == "":
-            print("Error: no api key file found. Please follow this instruction to obtain one: https://github.com/kentrachmat/public_ai_paper_challenge_codabench/blob/master/how_to_get_openai_api.md")
-            raise Exception("Error: no api key file found.")
+            print("Error: no api key file found in \"sample_submission_chatgpt_api_key.json\".\nPlease follow this instruction to obtain one:\nhttps://github.com/kentrachmat/public_ai_paper_challenge_codabench/blob/master/how_to_get_openai_api.md")
+            raise Exception("Error: no api key file found in \"sample_submission_chatgpt_api_key.json\".\nPlease follow this instruction to obtain one:\nhttps://github.com/kentrachmat/public_ai_paper_challenge_codabench/blob/master/how_to_get_openai_api.md")
 
     def set_api_key(self, api_key):
-        """
-        Arguments:
-           api_key: the API key for OpenAI.
-        """
         openai.api_key = api_key
 
     def conversation_generator(self, system, content):
-        """
-        Arguments:
-            system: a string of system message
-            content: a string of user message
-        Returns:
-            conversation: a list of dictionaries of conversation
-        """
         conversation = [{"role": "system", "content": system}]
         conversation.append({"role": "user", "content": content })
         return conversation
 
-    @retry_with_exponential_backoff
     def ask_chat_gpt(self, conversation, model="gpt-3.5-turbo-16k", temperature=0.0):
-        if num_tokens_from_messages(conversation, model="gpt-3.5-turbo") > 8_000:
+        if num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
             #num_tokens_from_messages() is greater than 8_000. Truncating conversation to 8_000 tokens
-            while num_tokens_from_messages(conversation, model="gpt-3.5-turbo") > 8_000:
+            while num_tokens_from_messages(conversation, model="gpt-3.5-turbo-0301") > 8_000:
                 conversation[-1]["content"] = conversation[-1]["content"][:-1000]
         response = openai.ChatCompletion.create(
                     model=model,
@@ -153,23 +61,23 @@ class model():
         for i in range(len(prompts)):
             success = False
             num_trials = 0
-            while success == False and num_trials < 5:
+            while success == False and num_trials < 10:
                 try:
                     body = []
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate survey papers around 2000 words.", f"You are a helpful assistant who will help me generate a survey paper with 2000 words. " + f"{prompts[i]}\nA good paper should:\n {instruction}")
-                    body = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
+                    body = json.loads(self.ask_chat_gpt(conversation, temperature=0.1*num_trials))
                     body_str = ""
                     for item in body:
                         body_str += item["heading"] + "\n" + item["text"] + "\n\n"
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate a paper abstract.", "You are a helpful assistant who will help me generate a paper abstract based on the text delimited with XML tags. Output the results exclusively in this JSON format: \{\"heading\":\"Abstract\",\"text\":\"....\"\}\n"f'<paper>{body_str}</paper>')
-                    abstract = json.loads(self.ask_chat_gpt(conversation, temperature=0.2*num_trials))
+                    abstract = json.loads(self.ask_chat_gpt(conversation, temperature=0.1*num_trials))
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate a paper title.", "You are a helpful assistant who will help me generate a title based on the provided abstract delimited with XML tags." + f'<abstract>{abstract["text"]}</abstract>')
-                    title = {"heading": "Title", "text": self.ask_chat_gpt(conversation, temperature=0.2*num_trials)}
+                    title = {"heading": "Title", "text": self.ask_chat_gpt(conversation, temperature=0.1*num_trials)}
 
                     conversation = self.conversation_generator("You are a helpful assistant who will help me generate paper references.", "You are a helpful assistant who will help me generate 10 references in BibTeX format based on the provided paper delimited with XML tags." + f'<paper>{body_str}</paper> \n' + "Output 10 references in a BibTeX format (without numbering and explanation) exclusively in this JSON format: \{\"heading\":\"References\",\"text\":\"....\"\}",)
-                    refs = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
+                    refs = self.ask_chat_gpt(conversation, temperature=0.1*num_trials)
                     refs = re.sub(r"\n", r"\\n", refs)
                     refs = re.sub(r"\\&", r"&", refs)
                     refs = re.sub(r"\\~", r"~", refs)
@@ -186,7 +94,7 @@ class model():
                     print("Error:", e)
                     print("Retrying...")
                     num_trials += 1
-            if num_trials == 5:
+            if num_trials == 10:
                 print(f"Error: Exceeded maximum number of trials ({num_trials}). Returning an error paper.")
                 generated_papers.append(json.dumps([{"heading": "Title", "text": "Error"}, {"heading": "Abstract", "text": "Error"}, {"heading": "Introduction", "text": "Error"}, {"heading": "Related Work", "text": "Error"}, {"heading": "Method", "text": "Error"}, {"heading": "Experiments", "text": "Error"}, {"heading": "Conclusion", "text": "Error"}, {"heading": "References", "text": "Error"}]))
         return generated_papers
@@ -213,7 +121,7 @@ class model():
                     review_score = self.ask_chat_gpt(conversation, temperature=0.2*num_trials)
                     review_score = json.loads(review_score)
                     review_scores.append(review_score)
-                    print("reviewing paper", i+1, "out of", len(papers))
+                    print("reviewed paper", i+1, "out of", len(papers))
                     success = True
                 except Exception as e:
                     print("Error:", e)
@@ -249,3 +157,35 @@ class model():
                                 },
                             })
         return review_scores
+
+def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301"):
+    """Returns the number of tokens used by a list of messages."""
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model == "gpt-3.5-turbo":
+        print("Warning: gpt-3.5-turbo may change over time. Returning num tokens assuming gpt-3.5-turbo-0301.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0301")
+    elif model == "gpt-4":
+        print("Warning: gpt-4 may change over time. Returning num tokens assuming gpt-4-0314.")
+        return num_tokens_from_messages(messages, model="gpt-4-0314")
+    elif model == "gpt-3.5-turbo-0301":
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+        tokens_per_name = -1  # if there's a name, the role is omitted
+    elif model == "gpt-4-0314":
+        tokens_per_message = 3
+        tokens_per_name = 1
+    else:
+        raise NotImplementedError(f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.""")
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+        if key == "name":
+            num_tokens += tokens_per_name
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
+    return num_tokens
